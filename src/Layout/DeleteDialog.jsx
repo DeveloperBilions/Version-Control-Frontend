@@ -1,4 +1,7 @@
 import React from "react";
+// react admin
+import { useDataProvider, useNotify, useRefresh } from "react-admin";
+// mui
 import {
   Dialog,
   Container,
@@ -7,7 +10,6 @@ import {
   Button,
   Typography,
 } from "@mui/material";
-import { useDataProvider, useNotify, useRefresh } from "react-admin";
 
 export const DeleteDialog = ({ open, handleClose, id, resource }) => {
   const dataProvider = useDataProvider();
