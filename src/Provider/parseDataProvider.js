@@ -58,14 +58,15 @@ export const dataProvider = {
       if (resource === "users") {
         query = new Parse.Query(Parse.User);
         result = await query.get(params.id, { useMasterKey: true });
+      } else if (resource === "applications") {
+        const Resource = Parse.Object.extend("Applications");
+        query = new Parse.Query(Resource);
+        result = await query.get(params.id);
       } else {
         const Resource = Parse.Object.extend(resource);
         query = new Parse.Query(Resource);
         result = await query.get(params.id);
       }
-      console.log("GETONE CALLED");
-      console.log(params);
-      console.log(result, result.attributes);
       return { data: { id: result.id, ...result.attributes } };
     } catch (error) {
       return error;
@@ -182,6 +183,11 @@ export const dataProvider = {
       if (resource === "users") {
         query = new Parse.Query(Parse.User);
         obj = await query.get(params.id);
+        r = await obj.save(data);
+      } else if (resource === "applications") {
+        const Resource = Parse.Object.extend("Applications");
+        query = new Parse.Query(Resource);
+        obj = await query.get(params?.data?.id);
         r = await obj.save(data);
       } else {
         // const Resource = Parse.Object.extend(resource);
