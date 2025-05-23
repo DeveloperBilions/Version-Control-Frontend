@@ -218,9 +218,6 @@ export const dataProvider = {
     }
   },
   delete: async (resource, params) => {
-    console.log("***", resource);
-    console.log("$$$", params);
-
     const userId = params.id;
 
     try {
@@ -230,12 +227,19 @@ export const dataProvider = {
         const data = { data: { id: userId, ...userId.attributes } };
         // console.log("%%%", data);
         return data;
+      } else if (resource === "applications") {
+        const Resource = Parse.Object.extend("Applications");
+        const query = new Parse.Query(Resource);
+        const obj = await query.get(userId);
+        const data = { data: { id: obj.id, ...obj.attributes } };
+
+        await obj.destroy();
+        return data;
       } else {
         const Resource = Parse.Object.extend(resource);
         const query = new Parse.Query(Resource);
         const obj = await query.get(params.id);
         const data = { data: { id: obj.id, ...obj.attributes } };
-        console.log("!!!", data);
 
         await obj.destroy();
         return data;

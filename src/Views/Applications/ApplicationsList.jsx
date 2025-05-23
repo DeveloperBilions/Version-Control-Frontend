@@ -10,12 +10,13 @@ import {
 // component
 import { CreateApplications } from "./dialog/CreateApplications";
 import { EditApplications } from "./dialog/EditApplications";
+import { DeleteDialog } from "../../Layout/DeleteDialog";
 // mui
 import { Button, Box, Menu, MenuItem } from "@mui/material";
 // mui icon
 import AddIcon from "@mui/icons-material/Add";
 
-const CustomButton = ({ onEdit }) => {
+const CustomButton = ({ onEdit, onDelete }) => {
   const record = useRecordContext();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -29,14 +30,12 @@ const CustomButton = ({ onEdit }) => {
   };
 
   const handleEdit = () => {
-    if (onEdit && record) {
-      onEdit(record); // Pass current row's record to parent
-    }
+    onEdit?.(record);
     handleClose();
   };
 
   const handleDeleteClick = () => {
-    // If you implement delete logic later, trigger it here
+    onDelete?.(record);
     handleClose();
   };
 
@@ -66,6 +65,7 @@ const CustomButton = ({ onEdit }) => {
 export const ApplicationsList = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   return (
@@ -94,6 +94,10 @@ export const ApplicationsList = () => {
                 setSelectedRecord(record);
                 setEditDialogOpen(true);
               }}
+              onDelete={(record) => {
+                setSelectedRecord(record);
+                setDeleteDialogOpen(true);
+              }}
             />
           </WrapperField>
           <TextField source="appName" label="App Name" />
@@ -109,6 +113,12 @@ export const ApplicationsList = () => {
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         record={selectedRecord}
+      />
+      <DeleteDialog
+        open={deleteDialogOpen}
+        handleClose={() => setDeleteDialogOpen(false)}
+        id={selectedRecord?.id}
+        resource="applications"
       />
     </React.Fragment>
   );
