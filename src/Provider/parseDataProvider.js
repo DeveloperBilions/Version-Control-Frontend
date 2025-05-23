@@ -1,9 +1,11 @@
 import { Parse } from "parse";
-import { parseConfig } from "../parseConfig";
-
-Parse.initialize(parseConfig.APP_ID, null, parseConfig.MASTER_KEY);
-Parse.masterKey = parseConfig.MASTER_KEY;
-Parse.serverURL = parseConfig.URL;
+Parse.initialize(
+  process.env.REACT_APP_APP_ID,
+  null,
+  process.env.REACT_APP_MASTER_KEY
+);
+Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
+Parse.serverURL = process.env.REACT_APP_SERVER_URL;
 
 export const dataProvider = {
   create: async (resource, params) => {
@@ -83,8 +85,7 @@ export const dataProvider = {
     if (resource === "users") {
       query = new Parse.Query(Parse.User);
       count = await query.count({ useMasterKey: useMasterKey });
-    }
-    if (resource === "applications") {
+    } else if (resource === "applications") {
       const Resource = Parse.Object.extend("Applications");
       query = new Parse.Query(Resource);
     } else {

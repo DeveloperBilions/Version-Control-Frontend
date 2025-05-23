@@ -107,21 +107,6 @@ const CustomButton = ({ fetchAllUsers }) => {
 };
 
 export const UserList = () => {
-  const [userData, setUserData] = useState();
-
-  const fetchAllUsers = async () => {
-    try {
-      const response = await Parse.Cloud.run("fetchAllUsers");
-      setUserData(response);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllUsers();
-  }, []);
-
   const dataFilters = [
     <SearchInput source="q" alwaysOn resettable variant="outlined" />,
   ];
@@ -140,10 +125,7 @@ export const UserList = () => {
         sx={{ pt: 1 }}
         actions={<PostListActions />}
       >
-        <Datagrid size="small" data={userData} rowClick={false}>
-          <WrapperField label="Actions">
-            <CustomButton fetchAllUsers={fetchAllUsers} />
-          </WrapperField>
+        <Datagrid size="small" rowClick={false}>
           <TextField source="username" label="Username" />
           <TextField source="email" label="Email" />
         </Datagrid>
