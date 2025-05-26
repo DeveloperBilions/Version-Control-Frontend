@@ -12,7 +12,7 @@ import { CreateApplications } from "./dialog/CreateApplications";
 import { EditApplications } from "./dialog/EditApplications";
 import { DeleteDialog } from "../../Layout/DeleteDialog";
 // mui
-import { Button, Box, Menu, MenuItem } from "@mui/material";
+import { Button, Box, Menu, MenuItem, Card } from "@mui/material";
 // mui icon
 import AddIcon from "@mui/icons-material/Add";
 // react router dom
@@ -91,7 +91,7 @@ export const ApplicationsList = () => {
 
   return (
     <React.Fragment>
-      <Box display="flex" justifyContent="flex-end" mt={2}>
+      <Box display="flex" justifyContent="flex-end" mt={4}>
         <Button
           variant="contained"
           color="primary"
@@ -102,37 +102,48 @@ export const ApplicationsList = () => {
         </Button>
       </Box>
 
-      <List
-        title="Application List"
-        // filters={dataFilters}
-        sx={{ pt: 1 }}
-        actions={false}
+      <Card
+        variant="elevation"
+        elevation={1}
+        sx={{
+          mt: 2,
+          backgroundColor: "#242424",
+          borderRadius: 2,
+          padding: { xs: 1.5, sm: 2 },
+        }}
       >
-        <Datagrid
-          size="small"
-          bulkActionButtons={false}
-          rowClick={(id, basePath, record) => {
-            navigate(`/applications/${id}?appName=${record.appName}`);
-            return false;
-          }}
+        <List
+          title="Application List"
+          // filters={dataFilters}
+          sx={{ pt: 1 }}
+          actions={false}
         >
-          <WrapperField label="Actions">
-            <CustomButton
-              onEdit={(record) => {
-                setSelectedRecord(record);
-                setEditDialogOpen(true);
-              }}
-              onDelete={(record) => {
-                setSelectedRecord(record);
-                setDeleteDialogOpen(true);
-              }}
-            />
-          </WrapperField>
-          <TextField source="appName" label="App Name" />
-          <TextField source="platform" label="Platform" />
-          <TextField source="packageId" label="Package ID" />
-        </Datagrid>
-      </List>
+          <Datagrid
+            size="small"
+            bulkActionButtons={false}
+            rowClick={(id, basePath, record) => {
+              navigate(`/applications/${id}?appName=${record.appName}`);
+              return false;
+            }}
+          >
+            <WrapperField label="Actions">
+              <CustomButton
+                onEdit={(record) => {
+                  setSelectedRecord(record);
+                  setEditDialogOpen(true);
+                }}
+                onDelete={(record) => {
+                  setSelectedRecord(record);
+                  setDeleteDialogOpen(true);
+                }}
+              />
+            </WrapperField>
+            <TextField source="appName" label="App Name" />
+            <TextField source="platform" label="Platform" />
+            <TextField source="packageId" label="Package ID" />
+          </Datagrid>
+        </List>
+      </Card>
       <CreateApplications
         open={openDialog}
         onClose={() => setOpenDialog(false)}

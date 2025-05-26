@@ -84,11 +84,11 @@ export const ReleaseList = () => {
 
   return (
     <React.Fragment>
-      <Box display="flex" justifyContent="space-between" mt={2}>
+      <Box display="flex" justifyContent="space-between" mt={4}>
         <Typography
           mt={2}
           variant="h4"
-          sx={{ color: "#999", fontWeight: 400, fontSize: 24 }}
+          sx={{ color: "#999", fontWeight: 400, fontSize: 18 }}
         >
           Releases for <b>{appName}</b>
         </Typography>
@@ -113,6 +113,7 @@ export const ReleaseList = () => {
         }}
       >
         <List
+          title="Release List"
           resource="release"
           // filters={<CustomFilter />}
           filter={{ appId: id }}
