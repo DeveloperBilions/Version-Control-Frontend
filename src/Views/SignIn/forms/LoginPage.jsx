@@ -1,192 +1,188 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+// react admin
 import { useLogin, useNotify } from "react-admin";
-import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import Link from "@mui/material/Link";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import FormHelperText from "@mui/material/FormHelperText";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import InputAdornment from "@mui/material/InputAdornment";
-import IconButton from "@mui/material/IconButton";
+// mui
+import {
+  Button,
+  FormControlLabel,
+  Checkbox,
+  Box,
+  Typography,
+  FormHelperText,
+  OutlinedInput,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
+// mui ison
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-
-import { inputValidations } from "../validations";
-
+// loader
+import { Loader } from "../../Loader";
+// hook form
 import { useForm } from "react-hook-form";
-
-// const defaultTheme = createTheme();
 
 const LoginPage = () => {
   const {
     register,
     handleSubmit,
-    getValues,
+    setValue,
     formState: { errors },
-  } = useForm();
+  } = useForm({ mode: "onBlur" });
 
   const login = useLogin();
   const notify = useNotify();
 
-  const onSubmit = (data) => {
-    // event.preventDefault();
-    // console.log(data);
-    const email = data?.email;
-    const password = data?.password;
-    login({ email, password }).catch((err) => notify(err?.message));
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("rememberedUsername");
+    const encryptedPassword = localStorage.getItem("rememberedPassword");
+    if (savedUsername && encryptedPassword) {
+      setValue("username", savedUsername);
+      setValue("password", encryptedPassword);
+      setRememberMe(true);
+    }
+  }, [setValue]);
+
+  const handleTogglePassword = () => {
+    setShowPassword((prev) => !prev);
   };
 
-  const [showPassword, setShowPassword] = useState(false);
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
-  const handleMouseDownPassword = (evt) => evt.preventDefault();
+  const onSubmit = (data) => {
+    // event.preventDefault();
+    console.log(data);
+    const username = data?.username;
+    const password = data?.password;
+
+    try {
+      login({ username, password }).catch((err) => notify(err?.message));
+
+      if (rememberMe) {
+        localStorage.setItem("rememberedUsername", username);
+        localStorage.setItem("rememberedPassword", password);
+      } else {
+        localStorage.removeItem("rememberedUsername");
+        localStorage.removeItem("rememberedPassword");
+      }
+    } catch (error) {
+      notify(error?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Grid container component="main" sx={{ height: "100vh" }}>
-      <CssBaseline />
-      <Grid
-        item
-        xs={false}
-        sm={4}
-        md={7}
+    <React.Fragment>
+      {loading && <Loader />}
+      <Box
         sx={{
-          backgroundImage: "url(https://source.unsplash.com/random?wallpapers)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh", // Ensure full height
+          width: "100vw", // Ensure full width
+          backgroundColor: "#000",
+          backgroundImage: "url('/Assets/Images/login.svg')",
+          backgroundSize: "cover", // Fully covers the screen
+          backgroundPosition: "top",
           backgroundRepeat: "no-repeat",
-          backgroundColor: (t) =>
-            t.palette.mode === "light"
-              ? t.palette.grey[50]
-              : t.palette.grey[900],
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-      <Grid
-        item
-        xs={12}
-        sm={8}
-        md={5}
-        component={Paper}
-        elevation={6}
-        square
-        sx={{
-          backgroundColor: "#e6e6e6",
+          "@media (max-width: 600px)": {
+            backgroundImage: "none", // Remove image on mobile
+            backgroundColor: "#000", // Keep background color
+          },
         }}
       >
         <Box
+          component="form"
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
           sx={{
-            my: 11,
-            mx: 8,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "left",
-            border: "1px solid grey",
-            backgroundColor: "white",
-            borderRadius: "2px",
-            padding: 3,
+            width: 400,
+            p: 4,
+            bgcolor: "#0E0F11",
+            borderRadius: 2,
+            boxShadow: 3,
           }}
         >
-          {/* <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-              <LockOutlinedIcon />
-            </Avatar> */}
-          <Typography component="h4" variant="h4" sx={{ mb: 1.5 }}>
-            {/* <Typography component="h1" variant="h5"> */}
-            Login
+          <Typography htmlFor="username" sx={{ color: "white", mb: 1 }}>
+            Username
           </Typography>
-          <Grid container>
-            <Grid item>
-              <Typography variant="body2">
-                Don't have an account?
-                <Link href="#/signup" variant="body2">
-                  {" Sign up now"}
-                </Link>
-              </Typography>
-            </Grid>
-          </Grid>
-          <Box component="form" noValidate onSubmit={handleSubmit(onSubmit)}>
-            <label htmlFor="email" sx={{ mb: 0, mt: 1 }}>
-              Email
-            </label>
-            <OutlinedInput
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              sx={{ mt: 0 }}
-              {...register("email", inputValidations["email"])}
-            />
-            {errors.email && (
-              <FormHelperText>{errors.email.message}</FormHelperText>
-            )}
+          <OutlinedInput
+            fullWidth
+            placeholder="Enter Your Username"
+            {...register("username", { required: "Username is required" })}
+            error={!!errors.username}
+            sx={{ backgroundColor: "#222", color: "#fff" }}
+          />
+          {errors.username && (
+            <FormHelperText sx={{ color: "#d32f2f" }}>
+              {errors.username.message}
+            </FormHelperText>
+          )}
 
-            <label htmlFor="password" sx={{ mb: 0 }}>
-              Password
-            </label>
-            <OutlinedInput
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              id="password"
-              autoComplete="current-password"
-              sx={{ mt: 0 }}
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    onMouseDown={handleMouseDownPassword}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              }
-              {...register("password", inputValidations["password"])}
-            />
-            {errors.password && (
-              <FormHelperText>{errors.password.message}</FormHelperText>
-            )}
-            <Grid container spacing={2}>
-              <Grid item xs={7}>
-                <FormControlLabel
-                  control={<Checkbox value="remember" color="primary" />}
-                  label="Remember me"
-                />
-              </Grid>
-              <Grid item xs={5}>
-                <Link href="#/reset-email" variant="body2">
-                  Forgot password?
-                </Link>
-              </Grid>
-            </Grid>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 1 }}
-            >
-              Log In
-            </Button>
-            <Typography variant="body1" align="center">
-              OR
-            </Typography>
-            <Button fullWidth variant="outlined" sx={{ mt: 1 }}>
-              Login with Google
-            </Button>
-          </Box>
+          <Typography htmlFor="password" sx={{ color: "white", mb: 1, mt: 2 }}>
+            Password
+          </Typography>
+          <OutlinedInput
+            fullWidth
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your password"
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password must be at least 6 characters",
+              },
+            })}
+            error={!!errors.password}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton onClick={handleTogglePassword} edge="end">
+                  {showPassword ? (
+                    <VisibilityOff sx={{ color: "#fff" }} />
+                  ) : (
+                    <Visibility sx={{ color: "#fff" }} />
+                  )}
+                </IconButton>
+              </InputAdornment>
+            }
+            sx={{ backgroundColor: "#222", color: "#fff" }}
+          />
+          {errors.password && (
+            <FormHelperText sx={{ color: "#d32f2f" }}>
+              {errors.password.message}
+            </FormHelperText>
+          )}
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                sx={{ color: "#FFC107" }}
+              />
+            }
+            label={<Typography color="white">Remember Me</Typography>}
+          />
+
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            sx={{
+              bgcolor: "#FFC107",
+              color: "#0E0F11",
+              fontSize: "16px",
+              "&:hover": { bgcolor: "#e6c300" },
+            }}
+          >
+            Login
+          </Button>
         </Box>
-      </Grid>
-    </Grid>
+      </Box>
+    </React.Fragment>
   );
 };
 

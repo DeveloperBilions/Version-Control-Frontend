@@ -10,9 +10,9 @@ Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
 export const authProvider = {
   login: async (params) => {
     //works
-    const { email, password } = params;
+    const { username, password } = params;
     try {
-      const user = await Parse.User.logIn(email, password);
+      const user = await Parse.User.logIn(username, password);
       return Promise.resolve();
     } catch (error) {
       console.log("===", error);
