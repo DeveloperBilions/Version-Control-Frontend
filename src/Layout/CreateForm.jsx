@@ -10,7 +10,7 @@ import {
 // mui
 import { Button, Grid, Box, Typography, Container } from "@mui/material";
 
-const SubmitForm = ({ handleClose, children, resource }) => {
+const SubmitForm = ({ handleClose, children, resource, extraData = {} }) => {
   const notify = useNotify();
   const refresh = useRefresh();
   const dataProvider = useDataProvider();
@@ -19,12 +19,16 @@ const SubmitForm = ({ handleClose, children, resource }) => {
   const successMessages = {
     users: "User created successfully!",
     applications: "Application created successfully!",
+    release: "Release created successfully!",
   };
 
   const handleSubmit = async (data) => {
     try {
       const response = await dataProvider.create(resource, {
-        data,
+        data: {
+          ...data,
+          ...extraData,
+        },
       });
       if (response) {
         notify(successMessages[resource], {
@@ -56,6 +60,7 @@ export const CreateForm = ({
   children,
   record,
   resource,
+  extraData = {},
 }) => {
   return (
     <React.Fragment>
@@ -87,7 +92,11 @@ export const CreateForm = ({
             <Typography component="h1" variant="h6" sx={{ mb: 3 }}>
               {title}
             </Typography>
-            <SubmitForm handleClose={handleClose} resource={resource}>
+            <SubmitForm
+              handleClose={handleClose}
+              resource={resource}
+              extraData={extraData}
+            >
               <Grid container>{children}</Grid>
               <Grid container spacing={2}>
                 <Grid item xs={6}>

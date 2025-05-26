@@ -19,6 +19,7 @@ const SubmitForm = ({ handleClose, children, resource }) => {
   const successMessages = {
     users: "User updated successfully!",
     applications: "Application updated successfully!",
+    release: "Release updated successfully!",
   };
 
   const handleSubmit = async (data) => {

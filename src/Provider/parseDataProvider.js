@@ -22,8 +22,7 @@ export const dataProvider = {
         const result = await user.signUp(data);
 
         return { data: { id: result.id, ...result.attributes } };
-      }
-      if (resource === "applications") {
+      } else if (resource === "applications") {
         const Applications = Parse.Object.extend("Applications");
         const application = new Applications();
 
@@ -38,6 +37,32 @@ export const dataProvider = {
         } catch (error) {
           console.error("Error creating application:", error);
           throw new Error("Failed to create application");
+        }
+      } else if (resource === "release") {
+        const ReleaseQuery = Parse.Object.extend("Release");
+        const releaseQuery = new ReleaseQuery();
+
+        const toBoolean = (value) => value === "true" || value === true;
+
+        // ✅ Create a pointer to Application
+        const Application = Parse.Object.extend("Applications");
+        const appPointer = new Application();
+        appPointer.id = params.data.appId;
+
+        // Set fields from params.data
+        releaseQuery.set("appId", appPointer);
+        releaseQuery.set("version", params.data.version);
+        releaseQuery.set("mandatory", toBoolean(params.data.mandatory));
+        releaseQuery.set("whitelisted", toBoolean(params.data.whitelisted));
+        releaseQuery.set("blacklisted", toBoolean(params.data.blacklisted));
+        releaseQuery.set("notes", params.data.notes);
+
+        try {
+          const savedApp = await releaseQuery.save();
+          return { data: { id: savedApp.id, ...savedApp.attributes } };
+        } catch (error) {
+          console.error("Error creating release:", error);
+          throw new Error("Failed to create release");
         }
       } else {
         const Resource = Parse.Object.extend(resource);
@@ -60,6 +85,10 @@ export const dataProvider = {
         result = await query.get(params.id, { useMasterKey: true });
       } else if (resource === "applications") {
         const Resource = Parse.Object.extend("Applications");
+        query = new Parse.Query(Resource);
+        result = await query.get(params.id);
+      } else if (resource === "release") {
+        const Resource = Parse.Object.extend("Release");
         query = new Parse.Query(Resource);
         result = await query.get(params.id);
       } else {
@@ -199,6 +228,25 @@ export const dataProvider = {
         query = new Parse.Query(Resource);
         obj = await query.get(params?.data?.id);
         r = await obj.save(data);
+      } else if (resource === "release") {
+        const Resource = Parse.Object.extend("Release");
+        const query = new Parse.Query(Resource);
+        const obj = await query.get(params?.data?.id);
+
+        // Convert string booleans to real booleans
+        const toBoolean = (value) => value === true || value === "true";
+
+        const data = {
+          ...params.data,
+          mandatory: toBoolean(params.data.mandatory),
+          whitelisted: toBoolean(params.data.whitelisted),
+          blacklisted: toBoolean(params.data.blacklisted),
+        };
+
+        const updatedRelease = await obj.save(data);
+        return {
+          data: { id: updatedRelease.id, ...updatedRelease.attributes },
+        };
       } else {
         // const Resource = Parse.Object.extend(resource);
         // query = new Resource();
