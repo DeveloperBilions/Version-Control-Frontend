@@ -15,6 +15,8 @@ import { DeleteDialog } from "../../Layout/DeleteDialog";
 import { Button, Box, Menu, MenuItem } from "@mui/material";
 // mui icon
 import AddIcon from "@mui/icons-material/Add";
+// react router dom
+import { useNavigate } from "react-router-dom";
 
 const CustomButton = ({ onEdit, onDelete }) => {
   const record = useRecordContext();
@@ -44,7 +46,10 @@ const CustomButton = ({ onEdit, onDelete }) => {
       <Button
         variant="contained"
         size="small"
-        onClick={handleClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleClick(e);
+        }}
         sx={{ textTransform: "none" }}
       >
         Actions
@@ -55,14 +60,30 @@ const CustomButton = ({ onEdit, onDelete }) => {
         onClose={handleClose}
         MenuListProps={{ "aria-labelledby": "actions-button" }}
       >
-        <MenuItem onClick={handleEdit}>Edit</MenuItem>
-        <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEdit();
+          }}
+        >
+          Edit
+        </MenuItem>
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteClick();
+          }}
+        >
+          Delete
+        </MenuItem>
       </Menu>
     </>
   );
 };
 
 export const ApplicationsList = () => {
+  const navigate = useNavigate();
+
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -87,7 +108,14 @@ export const ApplicationsList = () => {
         sx={{ pt: 1 }}
         actions={false}
       >
-        <Datagrid size="small" bulkActionButtons={false}>
+        <Datagrid
+          size="small"
+          bulkActionButtons={false}
+          rowClick={(id, basePath, record) => {
+            navigate(`/applications/${id}?appName=${record.appName}`);
+            return false;
+          }}
+        >
           <WrapperField label="Actions">
             <CustomButton
               onEdit={(record) => {

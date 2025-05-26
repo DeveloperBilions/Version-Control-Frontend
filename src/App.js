@@ -18,6 +18,7 @@ import { CreateUser } from "./Views/User/CreateUser";
 import { EditUser } from "./Views/User/EditUser";
 // applications component
 import { ApplicationsList } from "./Views/Applications/ApplicationsList";
+import { ReleaseList } from "./Views/Release/ReleaseList";
 
 function App() {
   return (
@@ -43,7 +44,9 @@ function App() {
         icon={PersonIcon}
       />
 
-      <CustomRoutes noLayout></CustomRoutes>
+      <CustomRoutes>
+        <Route path="/applications/:id" element={<ReleaseList />} />
+      </CustomRoutes>
     </Admin>
   );
 }

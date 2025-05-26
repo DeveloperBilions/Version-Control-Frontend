@@ -77,7 +77,7 @@ export const dataProvider = {
 
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
-    const { filter } = params.filter;
+    const filter = params.filter;
 
     var query = null;
     var count = null;
@@ -89,6 +89,16 @@ export const dataProvider = {
     } else if (resource === "applications") {
       const Resource = Parse.Object.extend("Applications");
       query = new Parse.Query(Resource);
+    } else if (resource === "release") {
+      const Resource = Parse.Object.extend("Release");
+      query = new Parse.Query(Resource);
+
+      // Create a pointer to the Application object
+      const application = new Parse.Object("Applications");
+      application.id = filter.appId; // or use yourAppId directly
+
+      // Filter releases by appId (pointer match)
+      query.equalTo("appId", application);
     } else {
       const Resource = Parse.Object.extend(resource);
       query = new Parse.Query(Resource);
