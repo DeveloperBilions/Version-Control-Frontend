@@ -28,7 +28,7 @@ export const UserList = () => {
       >
         <List
           title="Users"
-          filters={dataFilters}
+          // filters={dataFilters}
           sx={{ pt: 1, mt: "2px" }}
           actions={null}
         >
