@@ -66,10 +66,22 @@ export const EditReleases = ({ open, onClose, record }) => {
             </Grid>
             <Grid item xs={12}>
               <TextInput
-                id="notes"
-                name="notes"
-                source="notes"
-                label="Notes"
+                id="releaseNotes"
+                name="releaseNotes"
+                source="releaseNotes"
+                label="Release Notes"
+                multiline
+                minRows={2}
+                fullWidth
+                validate={[required()]}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextInput
+                id="remarks"
+                name="remarks"
+                source="remarks"
+                label="Remarks"
                 multiline
                 minRows={2}
                 fullWidth

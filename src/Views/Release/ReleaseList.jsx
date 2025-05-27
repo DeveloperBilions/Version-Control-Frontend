@@ -168,7 +168,8 @@ export const ReleaseList = () => {
                 );
               }}
             />
-            <TextField source="notes" label="Notes" />
+            <TextField source="releaseNotes" label="Release Notes" />
+            <TextField source="remarks" label="Remarks" />
           </Datagrid>
         </List>
       </Card>

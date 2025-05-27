@@ -55,7 +55,8 @@ export const dataProvider = {
         releaseQuery.set("mandatory", toBoolean(params.data.mandatory));
         releaseQuery.set("whitelisted", toBoolean(params.data.whitelisted));
         releaseQuery.set("blacklisted", toBoolean(params.data.blacklisted));
-        releaseQuery.set("notes", params.data.notes);
+        releaseQuery.set("releaseNotes", params.data.releaseNotes);
+        releaseQuery.set("remarks", params.data.remarks);
 
         try {
           const savedApp = await releaseQuery.save();
