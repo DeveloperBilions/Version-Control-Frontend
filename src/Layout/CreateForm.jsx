@@ -38,7 +38,9 @@ const SubmitForm = ({ handleClose, children, resource, extraData = {} }) => {
         handleClose();
         refresh();
       }
-    } catch (error) {}
+    } catch (error) {
+      notify(error.message, { type: "error" });
+    }
   };
 
   return (

@@ -1,3 +1,4 @@
+import semver from "semver";
 import { Parse } from "parse";
 Parse.initialize(
   process.env.REACT_APP_APP_ID,
@@ -49,9 +50,36 @@ export const dataProvider = {
         const appPointer = new Application();
         appPointer.id = params.data.appId;
 
-        // Set fields from params.data
+        // ✅ Step 1: Query for the latest version for this app
+        const prevReleaseQuery = new Parse.Query("Release");
+        prevReleaseQuery.equalTo("appId", appPointer);
+        prevReleaseQuery.descending("createdAt");
+        prevReleaseQuery.limit(1);
+        const previousReleases = await prevReleaseQuery.find();
+
+        const previousVersion =
+          previousReleases.length > 0
+            ? previousReleases[0].get("version")
+            : null;
+
+        const newVersion = params.data.version;
+
+        // ✅ Step 2: Validate version format and ensure it's higher
+        if (!semver.valid(newVersion)) {
+          throw new Error(
+            `Invalid version format "${newVersion}". Use version format like 1.0.0`
+          );
+        }
+
+        if (previousVersion && !semver.gt(newVersion, previousVersion)) {
+          throw new Error(
+            `Version "${newVersion}" must be greater than previous version "${previousVersion}"`
+          );
+        }
+
+        // Step 3: Save release
         releaseQuery.set("appId", appPointer);
-        releaseQuery.set("version", params.data.version);
+        releaseQuery.set("version", newVersion);
         releaseQuery.set("mandatory", toBoolean(params.data.mandatory));
         releaseQuery.set("whitelisted", toBoolean(params.data.whitelisted));
         releaseQuery.set("blacklisted", toBoolean(params.data.blacklisted));
@@ -73,7 +101,7 @@ export const dataProvider = {
         return { data: { id: result.id, ...result.attributes } };
       }
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   getOne: async (resource, params) => {
@@ -119,6 +147,7 @@ export const dataProvider = {
     } else if (resource === "applications") {
       const Resource = Parse.Object.extend("Applications");
       query = new Parse.Query(Resource);
+      query.equalTo("isDeleted", false);
     } else if (resource === "release") {
       const Resource = Parse.Object.extend("Release");
       query = new Parse.Query(Resource);
@@ -290,9 +319,13 @@ export const dataProvider = {
         const Resource = Parse.Object.extend("Applications");
         const query = new Parse.Query(Resource);
         const obj = await query.get(userId);
+
+        // Mark the object as deleted (soft delete)
+        obj.set("isDeleted", true);
+        await obj.save();
+
         const data = { data: { id: obj.id, ...obj.attributes } };
 
-        await obj.destroy();
         return data;
       } else {
         const Resource = Parse.Object.extend(resource);

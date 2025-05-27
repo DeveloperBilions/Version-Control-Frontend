@@ -23,6 +23,7 @@ export const EditReleases = ({ open, onClose, record }) => {
                 name="version"
                 source="version"
                 label="Version"
+                readOnly
                 fullWidth
                 validate={[required()]}
               />

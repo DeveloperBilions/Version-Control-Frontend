@@ -7,6 +7,20 @@ import { Grid, Dialog } from "@mui/material";
 import { CreateForm } from "../../../Layout/CreateForm";
 
 export const CreateReleases = ({ open, onClose, appId }) => {
+
+  const validateVersion = (value) => {
+    if (!value) {
+      return "Version is required";
+    }
+    // Regex for semantic versioning: e.g. 1.0.0, 2.1.3, 1.0.0-beta, 1.0.0+build.1 etc.
+    // You can simplify or extend this regex as needed
+    const versionRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9]+)?(\+[a-zA-Z0-9]+)?$/;
+
+    return versionRegex.test(value)
+      ? undefined
+      : "Version must be in the format (e.g. 1.0.0)";
+  };
+
   return (
     <React.Fragment>
       <Dialog fullWidth={true} open={open} onClose={onClose}>
@@ -24,7 +38,7 @@ export const CreateReleases = ({ open, onClose, appId }) => {
                 source="version"
                 label="Version"
                 fullWidth
-                validate={[required()]}
+                validate={[required(), validateVersion]}
               />
             </Grid>
             <Grid item xs={12}>
