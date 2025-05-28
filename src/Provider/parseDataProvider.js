@@ -266,6 +266,44 @@ export const dataProvider = {
         // Convert string booleans to real booleans
         const toBoolean = (value) => value === true || value === "true";
 
+        const newBlacklist = toBoolean(params.data.blacklisted);
+
+        // Only check blacklist condition if blacklisting is requested
+        if (newBlacklist) {
+          // Create pointer to Application
+          const Application = Parse.Object.extend("Applications");
+          const appPointer = new Application();
+          appPointer.id = params.data.appId;
+
+          // Query releases with higher versions for same app
+          const higherReleaseQuery = new Parse.Query("Release");
+          higherReleaseQuery.equalTo("appId", params.data.appId);
+
+          // Get all releases for app (will filter by version manually)
+          const allReleases = await higherReleaseQuery.find();
+
+          // Filter releases where:
+          // version > current release version
+          // whitelist === true
+          // blacklist === false
+          const suitableHigherVersions = allReleases.filter((r) => {
+            const v = r.get("version");
+            return (
+              semver.valid(v) &&
+              semver.gt(v, obj.get("version")) &&
+              r.get("whitelisted") === true &&
+              r.get("blacklisted") === false
+            );
+          });
+
+          if (suitableHigherVersions.length === 0) {
+            throw new Error(
+              "Cannot blacklist this version because no higher stable version exists."
+            );
+          }
+        }
+
+        // Prepare updated data
         const data = {
           ...params.data,
           mandatory: toBoolean(params.data.mandatory),
@@ -288,7 +326,7 @@ export const dataProvider = {
       }
       return { data: { id: r.id, ...r.attributes } };
     } catch (error) {
-      throw Error(error.toString());
+      throw error;
     }
   },
   updateMany: async (resource, params) => {
