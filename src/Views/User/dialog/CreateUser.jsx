@@ -135,6 +135,7 @@ export const CreateUser = ({ open, onClose }) => {
             <TextInput
               id="password"
               name="password"
+              source="password"
               label="Password"
               type={showPassword ? "text" : "password"}
               fullWidth
@@ -159,6 +160,7 @@ export const CreateUser = ({ open, onClose }) => {
             <TextInput
               id="confirmpassword"
               name="confirmpassword"
+              source="confirmpassword"
               label="Confirm Password"
               type={showConfirmPassword ? "text" : "password"}
               fullWidth
