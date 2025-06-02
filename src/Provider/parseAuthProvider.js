@@ -4,8 +4,8 @@ Parse.initialize(
   null,
   process.env.REACT_APP_MASTER_KEY
 );
-Parse.serverURL = process.env.REACT_APP_URL;
 Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
+Parse.serverURL = process.env.REACT_APP_URL;
 
 export const authProvider = {
   login: async (params) => {
@@ -33,15 +33,28 @@ export const authProvider = {
       return Promise.reject(error);
     }
   },
-  checkError: async ({ status }) => {
-    if (status === 401 || status === 403) {
-      Parse.User.current().then(() =>
-        Parse.User.logOut().then(() => {
-          const currentUser = Parse.User.current();
-        })
-      );
+  checkError: async (error) => {
+    const isInvalidSession =
+      error?.status === 401 ||
+      error?.status === 403 ||
+      error?.message?.toLowerCase().includes("invalid session token") ||
+      error?.code === 209;
+
+    if (isInvalidSession) {
+      console.warn("Invalid session detected, logging out...");
+
+      try {
+        await Parse.User.logOut();
+      } catch (err) {
+        console.error("Error during logout:", err);
+      }
+
+      // Clear localStorage
+      localStorage.clear();
+
       return Promise.reject();
     }
+
     return Promise.resolve();
   },
   checkAuth: async (params) => {
@@ -49,8 +62,25 @@ export const authProvider = {
   },
   logout: async () => {
     //works
+    console.log("LOGOUT");
     try {
+      const user = Parse.User.current();
+
+      if (user) {
+        localStorage.removeItem("role");
+
+        // Clear session token from local storage
+        localStorage.removeItem(
+          `Parse/${process.env.REACT_APP_APP_ID}/sessionToken`
+        );
+        localStorage.removeItem(
+          `Parse/${process.env.REACT_APP_APP_ID}/currentUser`
+        );
+      }
+
+      // localStorage.clear();
       await Parse.User.logOut();
+
       return Promise.resolve();
     } catch (error) {
       throw Error(error.toString());

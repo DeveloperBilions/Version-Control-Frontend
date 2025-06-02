@@ -1,3 +1,4 @@
+import semver from "semver";
 import { Parse } from "parse";
 import semver from "semver";
 
@@ -226,7 +227,21 @@ export const dataProvider = {
     var query = null;
     var results = null;
     if (resource === "users") {
-      results = params.ids.map((id) => new Parse.Query(Parse.User).get(id));
+      results = params.ids
+        .map((obj) => {
+          if (typeof obj === "string")
+            return new Parse.Query(Parse.User)
+              .get(obj, { useMasterKey: true })
+              .then((user) => {
+                console.log("✅ Found user:", user.obj);
+                return user;
+              })
+              .catch((err) => {
+                console.log("❌ User not found:", obj, err.message);
+                return null;
+              });
+        })
+        .filter((n) => n);
     } else if (resource === "roles") {
       results = params.ids
         .map((obj) => {
@@ -236,7 +251,7 @@ export const dataProvider = {
         .filter((n) => n);
     } else {
       const Resource = Parse.Object.extend(resource);
-      query = new Resource();
+      query = new Parse.Query(Resource);
       results = params.ids.map((id) => new Parse.Query(Resource).get(id));
     }
     try {
@@ -246,7 +261,7 @@ export const dataProvider = {
         data: data.map((o) => ({ id: o.id, ...o.attributes })),
       };
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   getManyReference: async (resource, params) => {

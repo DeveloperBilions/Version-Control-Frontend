@@ -93,7 +93,7 @@ export const UserList = () => {
                 }}
               />
             </ReferenceField>
-            <ReferenceField
+            {/* <ReferenceField
               source="manager.id"
               reference="users"
               label="Manager"
@@ -102,7 +102,7 @@ export const UserList = () => {
               sortBy="manager.username"
             >
               <TextField source="username" />
-            </ReferenceField>
+            </ReferenceField> */}
           </Datagrid>
         </List>
       </Card>

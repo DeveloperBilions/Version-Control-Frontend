@@ -2,7 +2,7 @@ import "./App.css";
 // react admin
 import { Admin, Resource, CustomRoutes } from "react-admin";
 
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 
 import LoginPage from "./Views/SignIn/forms/LoginPage";
 // provider
@@ -29,18 +29,29 @@ function App() {
       layout={MyLayout}
       theme={MyTheme}
     >
-      <Resource
-        name="users"
-        list={UserList}
-        options={{ label: "User List" }}
-        icon={PersonIcon}
-      />
-      <Resource
-        name="applications"
-        list={ApplicationsList}
-        options={{ label: "Applications" }}
-        icon={AppsIcon}
-      />
+      {(permissions) =>
+        permissions ? (
+          <>
+            <Resource
+              name="users"
+              list={UserList}
+              options={{ label: "User List" }}
+              icon={PersonIcon}
+            />
+            <Resource
+              name="applications"
+              list={ApplicationsList}
+              options={{ label: "Applications" }}
+              icon={AppsIcon}
+            />
+          </>
+        ) : (
+          <CustomRoutes noLayout>
+            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<LoginPage />} />
+          </CustomRoutes>
+        )
+      }
 
       <CustomRoutes>
         <Route path="/applications/:id" element={<ReleaseList />} />
