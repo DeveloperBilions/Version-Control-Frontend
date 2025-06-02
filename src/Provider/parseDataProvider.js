@@ -1,26 +1,28 @@
-import semver from "semver";
 import { Parse } from "parse";
+import semver from "semver";
+
 Parse.initialize(
-  process.env.REACT_APP_APP_ID,
+  process.env.REACT_APP_APPID,
   null,
   process.env.REACT_APP_MASTER_KEY
 );
+Parse.serverURL = process.env.REACT_APP_URL;
 Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
-Parse.serverURL = process.env.REACT_APP_SERVER_URL;
 
 export const dataProvider = {
   create: async (resource, params) => {
     try {
       if (resource === "users") {
-        const data = (({ username, name, email, password, balance }) => ({
+        const data = (({ username, email, password, role, manager }) => ({
           username,
-          name,
           email,
           password,
-          balance,
+          role,
+          manager,
         }))(params.data);
-        const user = new Parse.User();
-        const result = await user.signUp(data);
+        data.email = data.email.toLowerCase();
+
+        const result = await Parse.Cloud.run("createUser", params.data);
 
         return { data: { id: result.id, ...result.attributes } };
       } else if (resource === "applications") {
@@ -111,7 +113,7 @@ export const dataProvider = {
     try {
       if (resource === "users") {
         query = new Parse.Query(Parse.User);
-        result = await query.get(params.id, { useMasterKey: true });
+        result = await query.get(params.id);
       } else if (resource === "applications") {
         const Resource = Parse.Object.extend("Applications");
         query = new Parse.Query(Resource);
@@ -132,18 +134,30 @@ export const dataProvider = {
   },
   getList: async (resource, params) => {
     //works
-
+    Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
     const filter = params.filter;
-
     var query = null;
     var count = null;
-    const useMasterKey = params.useMasterKey || false;
 
     if (resource === "users") {
       query = new Parse.Query(Parse.User);
-      count = await query.count({ useMasterKey: useMasterKey });
+      query.include("role");
+
+      filter &&
+        Object.keys(filter).map((f) =>
+          typeof filter[f] === "string"
+            ? query.matches(f, filter[f], "i")
+            : query.equalTo(f, filter[f])
+        );
+    } else if (resource === "roles") {
+      query = new Parse.Query(Parse.Role);
+      filter.notSelf &&
+        query.notEqualTo(
+          "objectId",
+          (await Parse.User.current().get("role")).id
+        );
     } else if (resource === "applications") {
       const Resource = Parse.Object.extend("Applications");
       query = new Parse.Query(Resource);
@@ -161,25 +175,48 @@ export const dataProvider = {
     } else {
       const Resource = Parse.Object.extend(resource);
       query = new Parse.Query(Resource);
-      count = await query.count({ useMasterKey: useMasterKey });
+      filter &&
+        Object.keys(filter).map((f) =>
+          typeof filter[f] === "string"
+            ? query.matches(f, filter[f], "i")
+            : query.equalTo(f, filter[f])
+        );
     }
 
+    count = await query.count();
     query.limit(perPage);
     query.skip((page - 1) * perPage);
 
     if (order === "DESC") query.descending(field);
     else if (order === "ASC") query.ascending(field);
 
-    filter && Object.keys(filter).map((f) => query.matches(f, filter[f], "i"));
-
     try {
-      const results =
-        resource === "users"
-          ? await query.find({ useMasterKey })
-          : await query.find();
+      const results = await query.find();
+
       return {
         total: count,
-        data: results.map((o) => ({ id: o.id, ...o.attributes })),
+        data: results.map((o) => {
+          // Add role name and precedence only if resource is "users"
+          if (resource === "users") {
+            const role = o.get("role");
+
+            const roleName = role ? role.get("name") : null;
+            const rolePrecedence = role ? role.get("precedence") : null;
+            const userId = o.id;
+
+            // Ensure that user data is updated in the cache
+            const userData = {
+              id: userId,
+              roleName,
+              rolePrecedence,
+              ...o.attributes,
+            };
+
+            return userData;
+          } else {
+            return { id: o.id, ...o.attributes };
+          }
+        }),
       };
     } catch (error) {
       return error;
@@ -190,6 +227,13 @@ export const dataProvider = {
     var results = null;
     if (resource === "users") {
       results = params.ids.map((id) => new Parse.Query(Parse.User).get(id));
+    } else if (resource === "roles") {
+      results = params.ids
+        .map((obj) => {
+          if (typeof obj === "string")
+            return new Parse.Query(Parse.Role).get(obj, { useMasterKey: true });
+        })
+        .filter((n) => n);
     } else {
       const Resource = Parse.Object.extend(resource);
       query = new Resource();

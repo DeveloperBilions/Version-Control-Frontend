@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Drawer, Toolbar, Divider, IconButton } from "@mui/material";
+import {
+  Drawer,
+  Toolbar,
+  Divider,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 const drawerWidth = "16em";
@@ -34,6 +40,9 @@ export const MySidebar = ({ open, toggleDrawer, children }) => {
             width="100%"
           />
         )} */}
+        <Typography variant="h6" sx={{ color: "#fff" }}>
+          Version Control
+        </Typography>
         <IconButton onClick={toggleDrawer}>
           <ChevronLeftIcon sx={{ color: "#fff" }} />
         </IconButton>

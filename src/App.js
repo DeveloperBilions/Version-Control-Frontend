@@ -1,24 +1,24 @@
 import "./App.css";
+// react admin
 import { Admin, Resource, CustomRoutes } from "react-admin";
-
-import PersonIcon from "@mui/icons-material/Person";
 
 import { Route } from "react-router-dom";
 
 import LoginPage from "./Views/SignIn/forms/LoginPage";
-
+// provider
 import { authProvider } from "./Provider/parseAuthProvider";
 import { dataProvider } from "./Provider/parseDataProvider";
-
+// layout
 import { MyLayout } from "./Layout/MyLayout";
 import { MyTheme } from "./Layout/MyDefaultTheme";
 // users component
 import { UserList } from "./Views/User/UserList";
-import { CreateUser } from "./Views/User/CreateUser";
-import { EditUser } from "./Views/User/EditUser";
 // applications component
 import { ApplicationsList } from "./Views/Applications/ApplicationsList";
 import { ReleaseList } from "./Views/Release/ReleaseList";
+// mui icon
+import PersonIcon from "@mui/icons-material/Person";
+import AppsIcon from "@mui/icons-material/Apps";
 
 function App() {
   return (
@@ -32,8 +32,6 @@ function App() {
       <Resource
         name="users"
         list={UserList}
-        create={CreateUser}
-        edit={EditUser}
         options={{ label: "User List" }}
         icon={PersonIcon}
       />
@@ -41,7 +39,7 @@ function App() {
         name="applications"
         list={ApplicationsList}
         options={{ label: "Applications" }}
-        icon={PersonIcon}
+        icon={AppsIcon}
       />
 
       <CustomRoutes>
