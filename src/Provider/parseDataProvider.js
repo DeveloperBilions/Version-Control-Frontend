@@ -1,5 +1,4 @@
-import semver from "semver";
-import { Parse } from "parse";
+import Parse from "parse";
 import semver from "semver";
 
 Parse.initialize(
