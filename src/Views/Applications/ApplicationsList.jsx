@@ -6,6 +6,7 @@ import {
   TextField,
   useRecordContext,
   WrapperField,
+  useGetIdentity,
 } from "react-admin";
 // component
 import { CreateApplications } from "./dialog/CreateApplications";
@@ -83,30 +84,35 @@ const CustomButton = ({ onEdit, onDelete }) => {
 
 export const ApplicationsList = () => {
   const navigate = useNavigate();
+  const { isPending, error, data, refetch } = useGetIdentity();
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
+  console.log("*** data", data);
+
   return (
     <React.Fragment>
-      <Box display="flex" justifyContent="flex-end" mt={4}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => setOpenDialog(true)}
-        >
-          Add Application
-        </Button>
-      </Box>
+      {data?.userRoleName === "Super-User" && (
+        <Box display="flex" justifyContent="flex-end" mt={4}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenDialog(true)}
+          >
+            Add Application
+          </Button>
+        </Box>
+      )}
 
       <Card
         variant="elevation"
         elevation={1}
         sx={{
-          mt: 2,
+          mt: data?.userRoleName === "Super-User" ? 2 : 4,
           backgroundColor: "#242424",
           borderRadius: 2,
           padding: { xs: 1.5, sm: 2 },
@@ -126,18 +132,20 @@ export const ApplicationsList = () => {
               return false;
             }}
           >
-            <WrapperField label="Actions">
-              <CustomButton
-                onEdit={(record) => {
-                  setSelectedRecord(record);
-                  setEditDialogOpen(true);
-                }}
-                onDelete={(record) => {
-                  setSelectedRecord(record);
-                  setDeleteDialogOpen(true);
-                }}
-              />
-            </WrapperField>
+            {data?.userRoleName === "Super-User" && (
+              <WrapperField label="Actions">
+                <CustomButton
+                  onEdit={(record) => {
+                    setSelectedRecord(record);
+                    setEditDialogOpen(true);
+                  }}
+                  onDelete={(record) => {
+                    setSelectedRecord(record);
+                    setDeleteDialogOpen(true);
+                  }}
+                />
+              </WrapperField>
+            )}
             <TextField source="appName" label="App Name" />
             <TextField source="platform" label="Platform" />
             <TextField source="packageId" label="Package ID" />

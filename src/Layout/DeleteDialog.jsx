@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 // react admin
 import { useDataProvider, useNotify, useRefresh } from "react-admin";
 // mui
@@ -10,11 +10,15 @@ import {
   Button,
   Typography,
 } from "@mui/material";
+// loader
+import { Loader } from "../Views/Loader";
 
 export const DeleteDialog = ({ open, handleClose, id, resource }) => {
   const dataProvider = useDataProvider();
   const notify = useNotify();
   const refresh = useRefresh();
+
+  const [loading, setLoading] = useState(false);
 
   // Define messages based on resource
   const successMessages = {
@@ -23,6 +27,8 @@ export const DeleteDialog = ({ open, handleClose, id, resource }) => {
   };
 
   const handleDelete = async () => {
+    setLoading(true);
+
     try {
       const response = await dataProvider.delete(resource, {
         id,
@@ -37,12 +43,15 @@ export const DeleteDialog = ({ open, handleClose, id, resource }) => {
       }
     } catch (error) {
       notify("Error while deleting", { type: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <React.Fragment>
       <Dialog open={open} onClose={handleClose}>
+        {loading && <Loader />}
         <Container component="overlay" maxWidth="sm" sx={{ p: 3 }}>
           <Box className="overlayFormBox">
             <Typography variant="h6" sx={{ mb: 2 }}>

@@ -50,14 +50,14 @@ const LoginPage = () => {
     setShowPassword((prev) => !prev);
   };
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     // event.preventDefault();
-    console.log(data);
     const username = data?.username;
     const password = data?.password;
+    setLoading(true);
 
     try {
-      login({ username, password }).catch((err) => notify(err?.message));
+      await login({ username, password }).catch((err) => notify(err?.message));
 
       if (rememberMe) {
         localStorage.setItem("rememberedUsername", username);
@@ -68,6 +68,7 @@ const LoginPage = () => {
       }
     } catch (error) {
       notify(error?.message || "Login failed. Please try again.");
+      setLoading(false);
     } finally {
       setLoading(false);
     }

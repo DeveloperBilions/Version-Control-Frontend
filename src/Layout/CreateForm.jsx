@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 // react admin
 import {
   Form,
@@ -9,11 +9,15 @@ import {
 } from "react-admin";
 // mui
 import { Button, Grid, Box, Typography, Container } from "@mui/material";
+// loader
+import { Loader } from "../Views/Loader";
 
 const SubmitForm = ({ handleClose, children, resource, extraData = {} }) => {
   const notify = useNotify();
   const refresh = useRefresh();
   const dataProvider = useDataProvider();
+
+  const [loading, setLoading] = useState(false);
 
   // Define messages based on resource
   const successMessages = {
@@ -23,6 +27,8 @@ const SubmitForm = ({ handleClose, children, resource, extraData = {} }) => {
   };
 
   const handleSubmit = async (data) => {
+    setLoading(true);
+
     try {
       const response = await dataProvider.create(resource, {
         data: {
@@ -40,11 +46,14 @@ const SubmitForm = ({ handleClose, children, resource, extraData = {} }) => {
       }
     } catch (error) {
       notify(error.message, { type: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
+      {loading && <Loader />}
       <Form
         noValidate
         onSubmit={handleSubmit}
