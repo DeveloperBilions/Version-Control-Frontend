@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 // react admin
 import {
   Form,
@@ -9,22 +9,32 @@ import {
 } from "react-admin";
 // mui
 import { Button, Grid, Box, Typography, Container } from "@mui/material";
+// loader
+import { Loader } from "../Views/Loader";
 
-const SubmitForm = ({ handleClose, children, resource }) => {
+const SubmitForm = ({ handleClose, children, resource, extraData = {} }) => {
   const notify = useNotify();
   const refresh = useRefresh();
   const dataProvider = useDataProvider();
+
+  const [loading, setLoading] = useState(false);
 
   // Define messages based on resource
   const successMessages = {
     users: "User created successfully!",
     applications: "Application created successfully!",
+    release: "Release created successfully!",
   };
 
   const handleSubmit = async (data) => {
+    setLoading(true);
+
     try {
       const response = await dataProvider.create(resource, {
-        data,
+        data: {
+          ...data,
+          ...extraData,
+        },
       });
       if (response) {
         notify(successMessages[resource], {
@@ -34,11 +44,16 @@ const SubmitForm = ({ handleClose, children, resource }) => {
         handleClose();
         refresh();
       }
-    } catch (error) {}
+    } catch (error) {
+      notify(error.message, { type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
+      {loading && <Loader />}
       <Form
         noValidate
         onSubmit={handleSubmit}
@@ -56,6 +71,7 @@ export const CreateForm = ({
   children,
   record,
   resource,
+  extraData = {},
 }) => {
   return (
     <React.Fragment>
@@ -87,9 +103,13 @@ export const CreateForm = ({
             <Typography component="h1" variant="h6" sx={{ mb: 3 }}>
               {title}
             </Typography>
-            <SubmitForm handleClose={handleClose} resource={resource}>
+            <SubmitForm
+              handleClose={handleClose}
+              resource={resource}
+              extraData={extraData}
+            >
               <Grid container>{children}</Grid>
-              <Grid container spacing={1}>
+              <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Button
                     variant="outlined"

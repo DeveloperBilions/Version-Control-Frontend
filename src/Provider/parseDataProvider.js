@@ -1,27 +1,31 @@
-import { Parse } from "parse";
-import { parseConfig } from "../parseConfig";
+import Parse from "parse";
+import semver from "semver";
 
-Parse.initialize(parseConfig.APP_ID, null, parseConfig.MASTER_KEY);
-Parse.masterKey = parseConfig.MASTER_KEY;
-Parse.serverURL = parseConfig.URL;
+Parse.initialize(
+  process.env.REACT_APP_APPID,
+  null,
+  process.env.REACT_APP_MASTER_KEY
+);
+Parse.serverURL = process.env.REACT_APP_URL;
+Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
 
 export const dataProvider = {
   create: async (resource, params) => {
     try {
       if (resource === "users") {
-        const data = (({ username, name, email, password, balance }) => ({
+        const data = (({ username, email, password, role, manager }) => ({
           username,
-          name,
           email,
           password,
-          balance,
+          role,
+          manager,
         }))(params.data);
-        const user = new Parse.User();
-        const result = await user.signUp(data);
+        data.email = data.email.toLowerCase();
+
+        const result = await Parse.Cloud.run("createUser", params.data);
 
         return { data: { id: result.id, ...result.attributes } };
-      }
-      if (resource === "applications") {
+      } else if (resource === "applications") {
         const Applications = Parse.Object.extend("Applications");
         const application = new Applications();
 
@@ -37,6 +41,60 @@ export const dataProvider = {
           console.error("Error creating application:", error);
           throw new Error("Failed to create application");
         }
+      } else if (resource === "release") {
+        const ReleaseQuery = Parse.Object.extend("Release");
+        const releaseQuery = new ReleaseQuery();
+
+        const toBoolean = (value) => value === "true" || value === true;
+
+        // ✅ Create a pointer to Application
+        const Application = Parse.Object.extend("Applications");
+        const appPointer = new Application();
+        appPointer.id = params.data.appId;
+
+        // ✅ Step 1: Query for the latest version for this app
+        const prevReleaseQuery = new Parse.Query("Release");
+        prevReleaseQuery.equalTo("appId", appPointer);
+        prevReleaseQuery.descending("createdAt");
+        prevReleaseQuery.limit(1);
+        const previousReleases = await prevReleaseQuery.find();
+
+        const previousVersion =
+          previousReleases.length > 0
+            ? previousReleases[0].get("version")
+            : null;
+
+        const newVersion = params.data.version;
+
+        // ✅ Step 2: Validate version format and ensure it's higher
+        if (!semver.valid(newVersion)) {
+          throw new Error(
+            `Invalid version format "${newVersion}". Use version format like 1.0.0`
+          );
+        }
+
+        if (previousVersion && !semver.gt(newVersion, previousVersion)) {
+          throw new Error(
+            `Version "${newVersion}" must be greater than previous version "${previousVersion}"`
+          );
+        }
+
+        // Step 3: Save release
+        releaseQuery.set("appId", appPointer);
+        releaseQuery.set("version", newVersion);
+        releaseQuery.set("mandatory", toBoolean(params.data.mandatory));
+        releaseQuery.set("whitelisted", toBoolean(params.data.whitelisted));
+        releaseQuery.set("blacklisted", toBoolean(params.data.blacklisted));
+        releaseQuery.set("releaseNotes", params.data.releaseNotes);
+        releaseQuery.set("remarks", params.data.remarks);
+
+        try {
+          const savedApp = await releaseQuery.save();
+          return { data: { id: savedApp.id, ...savedApp.attributes } };
+        } catch (error) {
+          console.error("Error creating release:", error);
+          throw new Error("Failed to create release");
+        }
       } else {
         const Resource = Parse.Object.extend(resource);
         const query = new Resource();
@@ -45,70 +103,118 @@ export const dataProvider = {
         return { data: { id: result.id, ...result.attributes } };
       }
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   getOne: async (resource, params) => {
-    //works
     var query = null;
     var result = null;
     try {
       if (resource === "users") {
         query = new Parse.Query(Parse.User);
-        result = await query.get(params.id, { useMasterKey: true });
+        result = await query.get(params.id);
+      } else if (resource === "applications") {
+        const Resource = Parse.Object.extend("Applications");
+        query = new Parse.Query(Resource);
+        result = await query.get(params.id);
+      } else if (resource === "release") {
+        const Resource = Parse.Object.extend("Release");
+        query = new Parse.Query(Resource);
+        result = await query.get(params.id);
       } else {
         const Resource = Parse.Object.extend(resource);
         query = new Parse.Query(Resource);
         result = await query.get(params.id);
       }
-      console.log("GETONE CALLED");
-      console.log(params);
-      console.log(result, result.attributes);
       return { data: { id: result.id, ...result.attributes } };
     } catch (error) {
       return error;
     }
   },
   getList: async (resource, params) => {
-    //works
-
+    Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
-    const { filter } = params.filter;
-
+    const filter = params.filter;
     var query = null;
     var count = null;
-    const useMasterKey = params.useMasterKey || false;
 
     if (resource === "users") {
       query = new Parse.Query(Parse.User);
-      count = await query.count({ useMasterKey: useMasterKey });
-    }
-    if (resource === "applications") {
+      query.include("role");
+
+      filter &&
+        Object.keys(filter).map((f) =>
+          typeof filter[f] === "string"
+            ? query.matches(f, filter[f], "i")
+            : query.equalTo(f, filter[f])
+        );
+    } else if (resource === "roles") {
+      query = new Parse.Query(Parse.Role);
+      filter.notSelf &&
+        query.notEqualTo(
+          "objectId",
+          (await Parse.User.current().get("role")).id
+        );
+    } else if (resource === "applications") {
       const Resource = Parse.Object.extend("Applications");
       query = new Parse.Query(Resource);
+      query.equalTo("isDeleted", false);
+    } else if (resource === "release") {
+      const Resource = Parse.Object.extend("Release");
+      query = new Parse.Query(Resource);
+
+      // Create a pointer to the Application object
+      const application = new Parse.Object("Applications");
+      application.id = filter.appId; // or use yourAppId directly
+
+      // Filter releases by appId (pointer match)
+      query.equalTo("appId", application);
     } else {
       const Resource = Parse.Object.extend(resource);
       query = new Parse.Query(Resource);
-      count = await query.count({ useMasterKey: useMasterKey });
+      filter &&
+        Object.keys(filter).map((f) =>
+          typeof filter[f] === "string"
+            ? query.matches(f, filter[f], "i")
+            : query.equalTo(f, filter[f])
+        );
     }
 
+    count = await query.count();
     query.limit(perPage);
     query.skip((page - 1) * perPage);
 
     if (order === "DESC") query.descending(field);
     else if (order === "ASC") query.ascending(field);
 
-    filter && Object.keys(filter).map((f) => query.matches(f, filter[f], "i"));
-
     try {
-      const results =
-        resource === "users"
-          ? await query.find({ useMasterKey })
-          : await query.find();
+      const results = await query.find();
+
       return {
         total: count,
-        data: results.map((o) => ({ id: o.id, ...o.attributes })),
+        data: results.map((o) => {
+          // Add role name and precedence only if resource is "users"
+          if (resource === "users") {
+            const role = o.get("role");
+
+            const roleName = role ? role.get("name") : null;
+            const rolePrecedence = role ? role.get("precedence") : null;
+            const userId = o.id;
+
+            // Ensure that user data is updated in the cache
+            const userData = {
+              id: userId,
+              roleName,
+              rolePrecedence,
+              ...o.attributes,
+            };
+
+            return userData;
+          } else {
+            return { id: o.id, ...o.attributes };
+          }
+        }),
       };
     } catch (error) {
       return error;
@@ -118,10 +224,31 @@ export const dataProvider = {
     var query = null;
     var results = null;
     if (resource === "users") {
-      results = params.ids.map((id) => new Parse.Query(Parse.User).get(id));
+      results = params.ids
+        .map((obj) => {
+          if (typeof obj === "string")
+            return new Parse.Query(Parse.User)
+              .get(obj, { useMasterKey: true })
+              .then((user) => {
+                console.log("✅ Found user:", user.obj);
+                return user;
+              })
+              .catch((err) => {
+                console.log("❌ User not found:", obj, err.message);
+                return null;
+              });
+        })
+        .filter((n) => n);
+    } else if (resource === "roles") {
+      results = params.ids
+        .map((obj) => {
+          if (typeof obj === "string")
+            return new Parse.Query(Parse.Role).get(obj, { useMasterKey: true });
+        })
+        .filter((n) => n);
     } else {
       const Resource = Parse.Object.extend(resource);
-      query = new Resource();
+      query = new Parse.Query(Resource);
       results = params.ids.map((id) => new Parse.Query(Resource).get(id));
     }
     try {
@@ -131,7 +258,7 @@ export const dataProvider = {
         data: data.map((o) => ({ id: o.id, ...o.attributes })),
       };
     } catch (error) {
-      return error;
+      throw error;
     }
   },
   getManyReference: async (resource, params) => {
@@ -166,7 +293,6 @@ export const dataProvider = {
     }
   },
   update: async (resource, params) => {
-    //works
     var query = null;
     var obj = null;
     var r = null;
@@ -182,6 +308,90 @@ export const dataProvider = {
         query = new Parse.Query(Parse.User);
         obj = await query.get(params.id);
         r = await obj.save(data);
+      } else if (resource === "applications") {
+        const Resource = Parse.Object.extend("Applications");
+        query = new Parse.Query(Resource);
+        obj = await query.get(params?.data?.id);
+        r = await obj.save(data);
+      } else if (resource === "release") {
+        const Resource = Parse.Object.extend("Release");
+        const query = new Parse.Query(Resource);
+        const obj = await query.get(params?.data?.id);
+
+        // Convert string booleans to real booleans
+        const toBoolean = (value) => value === true || value === "true";
+
+        const newBlacklist = toBoolean(params.data.blacklisted);
+
+        // Only check blacklist condition if blacklisting is requested
+        if (newBlacklist) {
+          // Create pointer to Application
+          const Application = Parse.Object.extend("Applications");
+          const appPointer = new Application();
+          appPointer.id = params.data.appId;
+
+          // Query releases with higher versions for same app
+          const higherReleaseQuery = new Parse.Query("Release");
+          higherReleaseQuery.equalTo("appId", params.data.appId);
+
+          // Get all releases for app (will filter by version manually)
+          const allReleases = await higherReleaseQuery.find();
+
+          // Filter releases where:
+          // version > current release version
+          // whitelist === true
+          // blacklist === false
+          const suitableHigherVersions = allReleases.filter((r) => {
+            const v = r.get("version");
+            return (
+              semver.valid(v) &&
+              semver.gt(v, obj.get("version")) &&
+              r.get("whitelisted") === true &&
+              r.get("blacklisted") === false
+            );
+          });
+
+          if (suitableHigherVersions.length === 0) {
+            throw new Error(
+              "Cannot blacklist this version because no higher stable version exists."
+            );
+          }
+        }
+
+        // Prepare updated data
+        const data = {
+          ...params.data,
+          mandatory: toBoolean(params.data.mandatory),
+          whitelisted: toBoolean(params.data.whitelisted),
+          blacklisted: toBoolean(params.data.blacklisted),
+        };
+
+        const updatedRelease = await obj.save(data);
+        return {
+          data: { id: updatedRelease.id, ...updatedRelease.attributes },
+        };
+      } else if (resource === "releaseStatus") {
+        const { id, data } = params;
+
+        const ParseObject = Parse.Object.extend("Release");
+        const query = new Parse.Query(ParseObject);
+
+        try {
+          const object = await query.get(id);
+          Object.entries(data).forEach(([key, value]) => {
+            object.set(key, value);
+          });
+          const updatedObject = await object.save();
+
+          return {
+            data: {
+              id: updatedObject.id,
+              ...updatedObject.toJSON(),
+            },
+          };
+        } catch (error) {
+          throw new Error(error.message);
+        }
       } else {
         // const Resource = Parse.Object.extend(resource);
         // query = new Resource();
@@ -193,12 +403,10 @@ export const dataProvider = {
       }
       return { data: { id: r.id, ...r.attributes } };
     } catch (error) {
-      throw Error(error.toString());
+      throw error;
     }
   },
   updateMany: async (resource, params) => {
-    //need to filter out id, createdAt, updatedAt
-
     const Resource = Parse.Object.extend(resource);
     try {
       const qs = await Promise.all(
@@ -211,9 +419,6 @@ export const dataProvider = {
     }
   },
   delete: async (resource, params) => {
-    console.log("***", resource);
-    console.log("$$$", params);
-
     const userId = params.id;
 
     try {
@@ -223,12 +428,23 @@ export const dataProvider = {
         const data = { data: { id: userId, ...userId.attributes } };
         // console.log("%%%", data);
         return data;
+      } else if (resource === "applications") {
+        const Resource = Parse.Object.extend("Applications");
+        const query = new Parse.Query(Resource);
+        const obj = await query.get(userId);
+
+        // Mark the object as deleted (soft delete)
+        obj.set("isDeleted", true);
+        await obj.save();
+
+        const data = { data: { id: obj.id, ...obj.attributes } };
+
+        return data;
       } else {
         const Resource = Parse.Object.extend(resource);
         const query = new Parse.Query(Resource);
         const obj = await query.get(params.id);
         const data = { data: { id: obj.id, ...obj.attributes } };
-        console.log("!!!", data);
 
         await obj.destroy();
         return data;

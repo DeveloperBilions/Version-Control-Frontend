@@ -4,9 +4,9 @@ import { TextInput, SelectInput, required } from "react-admin";
 // mui
 import { Grid, Dialog } from "@mui/material";
 // component
-import { CreateForm } from "../../../Layout/CreateForm";
+import { EditForm } from "../../../Layout/EditForm";
 
-export const CreateApplications = ({ open, onClose }) => {
+export const EditApplications = ({ open, onClose, record }) => {
   const platformChoices = [
     { id: "android", name: "Android" },
     { id: "ios", name: "iOS" },
@@ -16,9 +16,10 @@ export const CreateApplications = ({ open, onClose }) => {
   return (
     <React.Fragment>
       <Dialog fullWidth={true} open={open} onClose={onClose}>
-        <CreateForm
-          title="Create Application"
+        <EditForm
+          title="Edit Application"
           handleClose={onClose}
+          id={record?.id}
           resource="applications"
         >
           <Grid container spacing={1}>
@@ -54,7 +55,7 @@ export const CreateApplications = ({ open, onClose }) => {
               />
             </Grid>
           </Grid>
-        </CreateForm>
+        </EditForm>
       </Dialog>
     </React.Fragment>
   );

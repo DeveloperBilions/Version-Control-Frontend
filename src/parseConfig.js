@@ -1,8 +1,6 @@
 export const parseConfig = {
-    // URL: "http://52.66.243.78:1337/parse",
-    // URL: "https://game-admin-server.onrender.com/parse",
-    URL: "http://localhost:1337/parse",
-    JAVASCRIPT_KEY: null,
-    APP_ID: "myAppId",
-    MASTER_KEY: "5#>fJ@R%5v|$jyDs",
+  URL: process.env.REACT_APP_URL,
+  JAVASCRIPT_KEY: process.env.REACT_APP_JAVASCRIPT_KEY,
+  APP_ID: process.env.REACT_APP_APPID,
+  MASTER_KEY: process.env.REACT_APP_MASTER_KEY,
 };

@@ -1,72 +1,53 @@
 import * as React from "react";
-import { SidebarClasses, useLocales, useSidebarState } from "react-admin";
-import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import CssBaseline from "@mui/material/CssBaseline";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import List from "@mui/material/List";
-import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
+import {
+  Drawer,
+  Toolbar,
+  Divider,
+  IconButton,
+  Typography,
+} from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 const drawerWidth = "16em";
+const collapsedWidth = "0em"; // Adjust collapsed width
 
-export const MySidebar = ({ children }) => {
+export const MySidebar = ({ open, toggleDrawer, children }) => {
   return (
     <Drawer
-      variant="permanent"
+      variant="persistent"
       anchor="left"
+      open={open}
       sx={{
-        width: drawerWidth,
+        width: open ? drawerWidth : collapsedWidth,
         flexShrink: 0,
+        transition: "width 0.3s ease",
         "& .MuiDrawer-paper": {
-          width: drawerWidth,
+          width: open ? drawerWidth : collapsedWidth,
+          transition: "width 0.3s ease",
           boxSizing: "border-box",
           backgroundColor: "#1C1C1E",
           padding: "8px",
           overflow: "hidden",
         },
-        "& .MuiMenuItem-root": {
-          color: "#FFF",
-          fontSize: 18,
-          //   '&:active': {
-          //       backgroundColor: "blue",
-          //   },
-        },
-        // "& .MuiSvgIcon-root": {
-        //   color: "#d0d5e2",
-        // },
-        // "& .RaMenuItemLink-active": {
-        //   color: "#000",
-        //   backgroundColor: "#FFC107",
-        // },
-        // "& .MuiMenuItem.Mui-selected": {
-        //   backgroundColor: "red",
-        // },
       }}
     >
-      <Toolbar>
-        <Typography
-          variant="h4"
-          component="div"
-          align="center"
-          noWrap
-          sx={{
-            alignSelf: "center",
-            justifySelf: "center",
-            color: "white",
-          }}
-        >
-          GameZone
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        {/* {open && (
+          <img
+            src="/Assets/Logos/sidebar-logo.svg"
+            alt="Company Logo"
+            loading="lazy"
+            width="100%"
+          />
+        )} */}
+        <Typography variant="h6" sx={{ color: "#fff" }}>
+          Version Control
         </Typography>
+        <IconButton onClick={toggleDrawer}>
+          <ChevronLeftIcon sx={{ color: "#fff" }} />
+        </IconButton>
       </Toolbar>
-      <Divider sx={{ borderColor: "#45516e" }} />
+      <Divider />
       {children}
     </Drawer>
   );
