@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 // react admin
-import { useLogin, useNotify } from "react-admin";
+import {
+  useLogin,
+  useNotify,
+  usePermissions,
+  useRefresh,
+  useRedirect,
+} from "react-admin";
 // mui
 import {
   Button,
@@ -29,8 +35,11 @@ const LoginPage = () => {
     formState: { errors },
   } = useForm({ mode: "onBlur" });
 
+  const { refetch } = usePermissions();
+  const refresh = useRefresh();
   const login = useLogin();
   const notify = useNotify();
+  const redirect = useRedirect();
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -66,6 +75,9 @@ const LoginPage = () => {
         localStorage.removeItem("rememberedUsername");
         localStorage.removeItem("rememberedPassword");
       }
+      await refetch();
+      await refresh();
+      redirect("/users");
     } catch (error) {
       notify(error?.message || "Login failed. Please try again.");
       setLoading(false);
