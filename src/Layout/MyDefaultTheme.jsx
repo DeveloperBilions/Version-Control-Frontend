@@ -122,6 +122,26 @@ export const MyTheme = {
         },
       },
     },
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: {
+          color: "#FFF",
+        },
+        paper: {
+          backgroundColor: "#333 !important",
+        },
+      },
+    },
+    MuiDialogContentText: {
+      styleOverrides: {
+        root: {
+          color: "#FFF",
+        },
+        paper: {
+          backgroundColor: "#333 !important",
+        },
+      },
+    },
     MuiContainer: {
       styleOverrides: {
         root: {

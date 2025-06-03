@@ -25,6 +25,8 @@ import {
   Tooltip,
 } from "@mui/material";
 // mui icon
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -35,6 +37,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 // component
 import { CreateReleases } from "./dialog/CreateReleases";
 import { EditReleases } from "./dialog/EditReleases";
+import { RemarksDialog } from "./dialog/RemarksDialog";
 
 const CustomButton = ({ onEdit }) => {
   const record = useRecordContext();
@@ -99,6 +102,8 @@ export const ReleaseList = () => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [openNoteDialog, setOpenNoteDialog] = useState(false);
+  const [noteContent, setNoteContent] = useState("");
 
   return (
     <React.Fragment>
@@ -189,8 +194,65 @@ export const ReleaseList = () => {
                 );
               }}
             />
-            <TextField source="releaseNotes" label="Release Notes" />
-            <TextField source="remarks" label="Remarks" />
+
+            <FunctionField
+              label="Release Notes"
+              render={(record) => (
+                <Box display="flex" gap={1}>
+                  <Tooltip title="View Release Notes">
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Replace with actual view logic
+                        console.log("View release notes:", record.releaseNotes);
+                      }}
+                    >
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {record.status === 1 && (
+                    <Tooltip title="Download PDF">
+                      <IconButton
+                        size="small"
+                        color="secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Replace with actual PDF download logic
+                          console.log("Download PDF for:", record.releaseNotes);
+                        }}
+                      >
+                        <PictureAsPdfIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+              )}
+            />
+
+            <FunctionField
+              label="Remarks"
+              render={(record) => (
+                <Box display="flex" gap={1}>
+                  <Tooltip title="Remarks">
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNoteContent(record.remarks);
+                        setOpenNoteDialog(true);
+                      }}
+                    >
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
+            />
+
             <FunctionField
               label="Status"
               render={(record) => {
@@ -289,6 +351,11 @@ export const ReleaseList = () => {
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         record={selectedRecord}
+      />
+      <RemarksDialog
+        open={openNoteDialog}
+        onClose={() => setOpenNoteDialog(false)}
+        content={noteContent}
       />
     </React.Fragment>
   );
