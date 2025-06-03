@@ -35,7 +35,29 @@ export const dataProvider = {
         application.set("packageId", params.data.packageId);
 
         try {
+          // Save application to Parse
           const savedApp = await application.save();
+
+          // Attempt to create corresponding folder in S3
+          try {
+            const folderName = savedApp.id;
+            const folderResult = await Parse.Cloud.run("createS3Folder", {
+              folderName,
+            });
+
+            if (!folderResult || !folderResult.success) {
+              console.warn(
+                "S3 folder creation failed or returned unexpected response:",
+                folderResult
+              );
+            }
+          } catch (cloudError) {
+            console.error(
+              "Error calling Cloud Function `createS3Folder`:",
+              cloudError.message || cloudError
+            );
+          }
+
           return { data: { id: savedApp.id, ...savedApp.attributes } };
         } catch (error) {
           console.error("Error creating application:", error);

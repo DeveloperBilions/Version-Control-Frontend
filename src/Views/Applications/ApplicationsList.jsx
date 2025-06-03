@@ -118,6 +118,7 @@ export const ApplicationsList = () => {
       >
         <List
           title="Application List"
+          sort={{ field: "createdAt", order: "DESC" }}
           // filters={dataFilters}
           sx={{ pt: 1 }}
           actions={false}
