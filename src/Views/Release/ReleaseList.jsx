@@ -6,12 +6,27 @@ import {
   List,
   TextField,
   FunctionField,
-  useRecordContext,
   WrapperField,
+  useDataProvider,
+  useRecordContext,
+  useGetIdentity,
+  useRefresh,
 } from "react-admin";
 // mui
-import { Card, Typography, Button, Box, Menu, MenuItem } from "@mui/material";
+import {
+  Card,
+  Typography,
+  Button,
+  Box,
+  Menu,
+  MenuItem,
+  Chip,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 // mui icon
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import AddIcon from "@mui/icons-material/Add";
@@ -72,7 +87,10 @@ const CustomButton = ({ onEdit }) => {
 };
 
 export const ReleaseList = () => {
+  const dataProvider = useDataProvider();
   const params = useParams();
+  const refresh = useRefresh();
+  const { data } = useGetIdentity();
   const [searchParams] = useSearchParams();
 
   const id = params.id;
@@ -123,14 +141,17 @@ export const ReleaseList = () => {
           sx={{ mt: "2px" }}
         >
           <Datagrid bulkActionButtons={false}>
-            <WrapperField label="Actions">
-              <CustomButton
-                onEdit={(record) => {
-                  setSelectedRecord(record);
-                  setEditDialogOpen(true);
-                }}
-              />
-            </WrapperField>
+            {["Super-User", "Editor"].includes(data?.userRoleName) && (
+              <WrapperField label="Actions">
+                <CustomButton
+                  onEdit={(record) => {
+                    setSelectedRecord(record);
+                    setEditDialogOpen(true);
+                  }}
+                />
+              </WrapperField>
+            )}
+
             <TextField source="version" label="Version" />
             <FunctionField
               label="Mandatory"
@@ -170,6 +191,92 @@ export const ReleaseList = () => {
             />
             <TextField source="releaseNotes" label="Release Notes" />
             <TextField source="remarks" label="Remarks" />
+            <FunctionField
+              label="Status"
+              render={(record) => {
+                const getColor = (status) => {
+                  switch (status) {
+                    case 0:
+                      return "warning";
+                    case 1:
+                      return "success";
+                    case 2:
+                      return "error";
+                    default:
+                      return "default";
+                  }
+                };
+                const getLabel = (status) => {
+                  switch (status) {
+                    case 0:
+                      return "Pending";
+                    case 1:
+                      return "Approved";
+                    case 2:
+                      return "Rejected";
+                    default:
+                      return "Unknown";
+                  }
+                };
+
+                const handleApprove = () => {
+                  dataProvider
+                    .update("releaseStatus", {
+                      id: record.id,
+                      data: { status: 1 },
+                      previousData: record,
+                    })
+                    .then(() => refresh());
+                };
+
+                const handleReject = () => {
+                  dataProvider
+                    .update("releaseStatus", {
+                      id: record.id,
+                      data: { status: 2 },
+                      previousData: record,
+                    })
+                    .then(() => refresh());
+                };
+
+                if (
+                  record.status === 0 &&
+                  ["Super-User", "Editor"].includes(data?.userRoleName)
+                ) {
+                  return (
+                    <Box display="flex" gap={1}>
+                      <Tooltip title="Approve">
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={handleApprove}
+                        >
+                          <CheckIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Reject">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={handleReject}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  );
+                }
+
+                return (
+                  <Chip
+                    label={getLabel(record.status)}
+                    color={getColor(record.status)}
+                    size="small"
+                    variant="filled"
+                  />
+                );
+              }}
+            />
           </Datagrid>
         </List>
       </Card>

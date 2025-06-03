@@ -7,6 +7,7 @@ import {
   SearchInput,
   ReferenceField,
   FunctionField,
+  useGetIdentity,
 } from "react-admin";
 // mui
 import { Button, Box, Card, Chip } from "@mui/material";
@@ -21,6 +22,8 @@ Parse.initialize(process.env.REACT_APP_APPID, process.env.REACT_APP_MASTER_KEY);
 Parse.serverURL = process.env.REACT_APP_URL;
 
 export const UserList = () => {
+  const { data } = useGetIdentity();
+
   const [openDialog, setOpenDialog] = useState(false);
 
   const dataFilters = [
@@ -29,22 +32,24 @@ export const UserList = () => {
 
   return (
     <React.Fragment>
-      <Box display="flex" justifyContent="flex-end" mt={4}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => setOpenDialog(true)}
-        >
-          Add User
-        </Button>
-      </Box>
+      {["Super-User", "Editor"].includes(data?.userRoleName) && (
+        <Box display="flex" justifyContent="flex-end" mt={4}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenDialog(true)}
+          >
+            Add User
+          </Button>
+        </Box>
+      )}
 
       <Card
         variant="elevation"
         elevation={1}
         sx={{
-          mt: 2,
+          mt: ["Super-User", "Editor"].includes(data?.userRoleName) ? 2 : 4,
           backgroundColor: "#242424",
           borderRadius: 2,
           padding: { xs: 1.5, sm: 2 },

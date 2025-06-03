@@ -107,7 +107,6 @@ export const dataProvider = {
     }
   },
   getOne: async (resource, params) => {
-    //works
     var query = null;
     var result = null;
     try {
@@ -133,7 +132,6 @@ export const dataProvider = {
     }
   },
   getList: async (resource, params) => {
-    //works
     Parse.masterKey = process.env.REACT_APP_MASTER_KEY;
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
@@ -295,7 +293,6 @@ export const dataProvider = {
     }
   },
   update: async (resource, params) => {
-    //works
     var query = null;
     var obj = null;
     var r = null;
@@ -373,6 +370,28 @@ export const dataProvider = {
         return {
           data: { id: updatedRelease.id, ...updatedRelease.attributes },
         };
+      } else if (resource === "releaseStatus") {
+        const { id, data } = params;
+
+        const ParseObject = Parse.Object.extend("Release");
+        const query = new Parse.Query(ParseObject);
+
+        try {
+          const object = await query.get(id);
+          Object.entries(data).forEach(([key, value]) => {
+            object.set(key, value);
+          });
+          const updatedObject = await object.save();
+
+          return {
+            data: {
+              id: updatedObject.id,
+              ...updatedObject.toJSON(),
+            },
+          };
+        } catch (error) {
+          throw new Error(error.message);
+        }
       } else {
         // const Resource = Parse.Object.extend(resource);
         // query = new Resource();
@@ -388,8 +407,6 @@ export const dataProvider = {
     }
   },
   updateMany: async (resource, params) => {
-    //need to filter out id, createdAt, updatedAt
-
     const Resource = Parse.Object.extend(resource);
     try {
       const qs = await Promise.all(

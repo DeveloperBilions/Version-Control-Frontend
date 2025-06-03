@@ -84,14 +84,12 @@ const CustomButton = ({ onEdit, onDelete }) => {
 
 export const ApplicationsList = () => {
   const navigate = useNavigate();
-  const { isPending, error, data, refetch } = useGetIdentity();
+  const { data } = useGetIdentity();
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
-
-  console.log("*** data", data);
 
   return (
     <React.Fragment>
