@@ -64,6 +64,39 @@ export const dataProvider = {
           throw new Error("Failed to create application");
         }
       } else if (resource === "release") {
+        const { version, appId, pdfFile } = params.data;
+
+        let fileUrl = "";
+        if (pdfFile?.rawFile) {
+          const fileName = pdfFile.rawFile.name;
+
+          // Convert rawFile to base64
+          const pdfBase64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(pdfFile.rawFile);
+            reader.onload = () => {
+              const base64 = reader.result.split(",")[1]; // Remove `data:application/pdf;base64,`
+              resolve(base64);
+            };
+            reader.onerror = (err) => reject(err);
+          });
+
+          // ✅ Call Parse Cloud Function to upload to S3
+          try {
+            const result = await Parse.Cloud.run("uploadPDF", {
+              applicationId: appId,
+              version: version,
+              fileName,
+              fileBase64: pdfBase64,
+            });
+
+            fileUrl = result.fileUrl;
+          } catch (error) {
+            console.error("PDF upload failed:", error);
+            throw new Error("PDF upload failed");
+          }
+        }
+
         const ReleaseQuery = Parse.Object.extend("Release");
         const releaseQuery = new ReleaseQuery();
 
@@ -107,11 +140,12 @@ export const dataProvider = {
         releaseQuery.set("mandatory", toBoolean(params.data.mandatory));
         releaseQuery.set("whitelisted", toBoolean(params.data.whitelisted));
         releaseQuery.set("blacklisted", toBoolean(params.data.blacklisted));
-        releaseQuery.set("releaseNotes", params.data.releaseNotes);
+        releaseQuery.set("releaseNotes", fileUrl);
         releaseQuery.set("remarks", params.data.remarks);
 
         try {
           const savedApp = await releaseQuery.save();
+
           return { data: { id: savedApp.id, ...savedApp.attributes } };
         } catch (error) {
           console.error("Error creating release:", error);

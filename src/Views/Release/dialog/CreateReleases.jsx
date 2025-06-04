@@ -1,13 +1,18 @@
 import React from "react";
 // react admin
-import { TextInput, required, RadioButtonGroupInput } from "react-admin";
+import {
+  TextInput,
+  FileInput,
+  FileField,
+  RadioButtonGroupInput,
+  required,
+} from "react-admin";
 // mui
 import { Grid, Dialog } from "@mui/material";
 // component
 import { CreateForm } from "../../../Layout/CreateForm";
 
 export const CreateReleases = ({ open, onClose, appId }) => {
-
   const validateVersion = (value) => {
     if (!value) {
       return "Version is required";
@@ -79,17 +84,17 @@ export const CreateReleases = ({ open, onClose, appId }) => {
               </Grid>
             </Grid>
             <Grid item xs={12}>
-              <TextInput
-                id="releaseNotes"
-                name="releaseNotes"
-                source="releaseNotes"
+              <FileInput
+                source="pdfFile"
                 label="Release Notes"
-                multiline
-                minRows={2}
-                fullWidth
-                validate={[required()]}
-              />
+                accept="application/pdf"
+                placeholder={<p>Drop a PDF file here or click to upload</p>}
+                validate={required()}
+              >
+                <FileField source="src" title="title" />
+              </FileInput>
             </Grid>
+
             <Grid item xs={12}>
               <TextInput
                 id="remarks"

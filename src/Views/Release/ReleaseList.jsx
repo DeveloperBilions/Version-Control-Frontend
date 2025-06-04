@@ -11,6 +11,7 @@ import {
   useRecordContext,
   useGetIdentity,
   useRefresh,
+  useNotify,
 } from "react-admin";
 // mui
 import {
@@ -38,6 +39,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { CreateReleases } from "./dialog/CreateReleases";
 import { EditReleases } from "./dialog/EditReleases";
 import { RemarksDialog } from "./dialog/RemarksDialog";
+import Parse from "parse";
 
 const CustomButton = ({ onEdit }) => {
   const record = useRecordContext();
@@ -93,6 +95,7 @@ export const ReleaseList = () => {
   const dataProvider = useDataProvider();
   const params = useParams();
   const refresh = useRefresh();
+  const notify = useNotify();
   const { data } = useGetIdentity();
   const [searchParams] = useSearchParams();
 
@@ -218,10 +221,36 @@ export const ReleaseList = () => {
                       <IconButton
                         size="small"
                         color="secondary"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          // Replace with actual PDF download logic
-                          console.log("Download PDF for:", record.releaseNotes);
+
+                          const fullUrl = record.releaseNotes;
+
+                          try {
+                            const response = await Parse.Cloud.run(
+                              "getSignedS3Url",
+                              { fullUrl }
+                            );
+                            const signedUrl = response.url;
+
+                            const link = document.createElement("a");
+                            link.href = signedUrl;
+
+                            const fileName = fullUrl.split("/").pop();
+                            link.setAttribute("download", fileName);
+
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          } catch (err) {
+                            console.error("Failed to download PDF", err);
+                            notify(
+                              "Failed to download PDF. Please try again later.",
+                              {
+                                type: "error",
+                              }
+                            );
+                          }
                         }}
                       >
                         <PictureAsPdfIcon fontSize="small" />
