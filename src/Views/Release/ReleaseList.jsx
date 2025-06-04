@@ -39,6 +39,8 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { CreateReleases } from "./dialog/CreateReleases";
 import { EditReleases } from "./dialog/EditReleases";
 import { RemarksDialog } from "./dialog/RemarksDialog";
+import { PDFViewerDialog } from "./dialog/PDFViewerDialog";
+
 import Parse from "parse";
 
 const CustomButton = ({ onEdit }) => {
@@ -107,6 +109,8 @@ export const ReleaseList = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [openNoteDialog, setOpenNoteDialog] = useState(false);
   const [noteContent, setNoteContent] = useState("");
+  const [openPdfDialog, setOpenPdfDialog] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
 
   return (
     <React.Fragment>
@@ -206,10 +210,25 @@ export const ReleaseList = () => {
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        // Replace with actual view logic
-                        console.log("View release notes:", record.releaseNotes);
+                        try {
+                          const response = await Parse.Cloud.run(
+                            "getSignedS3Url",
+                            {
+                              fullUrl: record.releaseNotes,
+                              disposition: "inline",
+                            }
+                          );
+
+                          setPdfUrl(response.url);
+                          setOpenPdfDialog(true);
+                        } catch (err) {
+                          console.error("Failed to view PDF", err);
+                          notify("Failed to load PDF. Try again later.", {
+                            type: "error",
+                          });
+                        }
                       }}
                     >
                       <VisibilityIcon fontSize="small" />
@@ -229,7 +248,10 @@ export const ReleaseList = () => {
                           try {
                             const response = await Parse.Cloud.run(
                               "getSignedS3Url",
-                              { fullUrl }
+                              {
+                                fullUrl: record.releaseNotes,
+                                disposition: "attachment",
+                              }
                             );
                             const signedUrl = response.url;
 
@@ -385,6 +407,11 @@ export const ReleaseList = () => {
         open={openNoteDialog}
         onClose={() => setOpenNoteDialog(false)}
         content={noteContent}
+      />
+      <PDFViewerDialog
+        open={openPdfDialog}
+        onClose={() => setOpenPdfDialog(false)}
+        fileUrl={pdfUrl}
       />
     </React.Fragment>
   );
