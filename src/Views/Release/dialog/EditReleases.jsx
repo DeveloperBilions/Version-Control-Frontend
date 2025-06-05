@@ -1,6 +1,12 @@
 import React from "react";
 // react admin
-import { TextInput, required, RadioButtonGroupInput } from "react-admin";
+import {
+  TextInput,
+  FileInput,
+  FileField,
+  RadioButtonGroupInput,
+  required,
+} from "react-admin";
 // mui
 import { Grid, Dialog } from "@mui/material";
 // component
@@ -28,6 +34,7 @@ export const EditReleases = ({ open, onClose, record }) => {
                 validate={[required()]}
               />
             </Grid>
+
             <Grid item xs={12}>
               <Grid container spacing={2}>
                 <Grid item xs={4}>
@@ -65,18 +72,19 @@ export const EditReleases = ({ open, onClose, record }) => {
                 </Grid>
               </Grid>
             </Grid>
+
             <Grid item xs={12}>
-              <TextInput
-                id="releaseNotes"
-                name="releaseNotes"
+              <FileInput
                 source="releaseNotes"
                 label="Release Notes"
-                multiline
-                minRows={2}
-                fullWidth
-                validate={[required()]}
-              />
+                accept="application/pdf"
+                placeholder={<p>Drop a PDF file here or click to upload</p>}
+                validate={required()}
+              >
+                <FileField source="src" title="title" />
+              </FileInput>
             </Grid>
+
             <Grid item xs={12}>
               <TextInput
                 id="remarks"

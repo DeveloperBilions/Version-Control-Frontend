@@ -64,16 +64,16 @@ export const dataProvider = {
           throw new Error("Failed to create application");
         }
       } else if (resource === "release") {
-        const { version, appId, pdfFile } = params.data;
+        const { version, appId, releaseNotes } = params.data;
 
         let fileUrl = "";
-        if (pdfFile?.rawFile) {
-          const fileName = pdfFile.rawFile.name;
+        if (releaseNotes?.rawFile) {
+          const fileName = releaseNotes.rawFile.name;
 
           // Convert rawFile to base64
           const pdfBase64 = await new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.readAsDataURL(pdfFile.rawFile);
+            reader.readAsDataURL(releaseNotes.rawFile);
             reader.onload = () => {
               const base64 = reader.result.split(",")[1]; // Remove `data:application/pdf;base64,`
               resolve(base64);
@@ -140,7 +140,10 @@ export const dataProvider = {
         releaseQuery.set("mandatory", toBoolean(params.data.mandatory));
         releaseQuery.set("whitelisted", toBoolean(params.data.whitelisted));
         releaseQuery.set("blacklisted", toBoolean(params.data.blacklisted));
-        releaseQuery.set("releaseNotes", fileUrl);
+        releaseQuery.set("releaseNotes", {
+          src: fileUrl,
+          title: releaseNotes.rawFile.name,
+        });
         releaseQuery.set("remarks", params.data.remarks);
 
         try {
@@ -370,6 +373,39 @@ export const dataProvider = {
         obj = await query.get(params?.data?.id);
         r = await obj.save(data);
       } else if (resource === "release") {
+        const { version, appId, releaseNotes } = params.data;
+
+        let fileUrl = "";
+        if (releaseNotes?.rawFile) {
+          const fileName = releaseNotes.rawFile.name;
+
+          // Convert rawFile to base64
+          const pdfBase64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(releaseNotes.rawFile);
+            reader.onload = () => {
+              const base64 = reader.result.split(",")[1];
+              resolve(base64);
+            };
+            reader.onerror = (err) => reject(err);
+          });
+
+          // ✅ Call Parse Cloud Function to upload to S3
+          try {
+            const result = await Parse.Cloud.run("editPDF", {
+              applicationId: appId.id,
+              version: version,
+              fileName,
+              fileBase64: pdfBase64,
+            });
+
+            fileUrl = result.fileUrl;
+          } catch (error) {
+            console.error("PDF upload failed:", error);
+            throw new Error("PDF upload failed");
+          }
+        }
+
         const Resource = Parse.Object.extend("Release");
         const query = new Parse.Query(Resource);
         const obj = await query.get(params?.data?.id);
@@ -420,6 +456,12 @@ export const dataProvider = {
           mandatory: toBoolean(params.data.mandatory),
           whitelisted: toBoolean(params.data.whitelisted),
           blacklisted: toBoolean(params.data.blacklisted),
+          releaseNotes: releaseNotes?.rawFile
+            ? {
+                src: fileUrl,
+                title: releaseNotes.rawFile.name,
+              }
+            : releaseNotes,
         };
 
         const updatedRelease = await obj.save(data);

@@ -216,7 +216,7 @@ export const ReleaseList = () => {
                           const response = await Parse.Cloud.run(
                             "getSignedS3Url",
                             {
-                              fullUrl: record.releaseNotes,
+                              fullUrl: record.releaseNotes.src,
                               disposition: "inline",
                             }
                           );
@@ -243,13 +243,13 @@ export const ReleaseList = () => {
                         onClick={async (e) => {
                           e.stopPropagation();
 
-                          const fullUrl = record.releaseNotes;
+                          const fullUrl = record.releaseNotes.src;
 
                           try {
                             const response = await Parse.Cloud.run(
                               "getSignedS3Url",
                               {
-                                fullUrl: record.releaseNotes,
+                                fullUrl: record.releaseNotes.src,
                                 disposition: "attachment",
                               }
                             );

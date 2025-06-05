@@ -87,7 +87,7 @@ export const CreateReleases = ({ open, onClose, appId }) => {
 
             <Grid item xs={12}>
               <FileInput
-                source="pdfFile"
+                source="releaseNotes"
                 label="Release Notes"
                 accept="application/pdf"
                 placeholder={<p>Drop a PDF file here or click to upload</p>}
@@ -96,7 +96,7 @@ export const CreateReleases = ({ open, onClose, appId }) => {
                 <FileField source="src" title="title" />
               </FileInput>
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextInput
                 id="remarks"
