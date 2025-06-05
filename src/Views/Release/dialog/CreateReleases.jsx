@@ -46,6 +46,7 @@ export const CreateReleases = ({ open, onClose, appId }) => {
                 validate={[required(), validateVersion]}
               />
             </Grid>
+
             <Grid item xs={12}>
               <Grid container spacing={2}>
                 <Grid item xs={4}>
@@ -83,6 +84,7 @@ export const CreateReleases = ({ open, onClose, appId }) => {
                 </Grid>
               </Grid>
             </Grid>
+
             <Grid item xs={12}>
               <FileInput
                 source="pdfFile"
@@ -94,7 +96,7 @@ export const CreateReleases = ({ open, onClose, appId }) => {
                 <FileField source="src" title="title" />
               </FileInput>
             </Grid>
-
+            
             <Grid item xs={12}>
               <TextInput
                 id="remarks"
