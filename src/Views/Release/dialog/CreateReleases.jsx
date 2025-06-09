@@ -91,7 +91,18 @@ export const CreateReleases = ({ open, onClose, appId }) => {
                 label="Release Notes"
                 accept="application/pdf"
                 placeholder={<p>Drop a PDF file here or click to upload</p>}
-                validate={required()}
+                validate={[
+                  required(),
+                  (value) => {
+                    const file =
+                      value?.rawFile ||
+                      (Array.isArray(value) ? value[0]?.rawFile : null);
+                    if (file && file.type !== "application/pdf") {
+                      return "Only PDF files are allowed";
+                    }
+                    return undefined;
+                  },
+                ]}
               >
                 <FileField source="src" title="title" />
               </FileInput>
