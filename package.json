@@ -1,6 +1,6 @@
 {
-  "name": "game-admin-portal",
-  "version": "0.1.0",
+  "name": "version-control-frontend",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@tanstack/react-query": "^5.51.1",
