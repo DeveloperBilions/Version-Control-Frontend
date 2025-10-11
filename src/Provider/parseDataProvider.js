@@ -218,7 +218,8 @@ export const dataProvider = {
     } else if (resource === "applications") {
       const Resource = Parse.Object.extend("Applications");
       query = new Parse.Query(Resource);
-      query.equalTo("isDeleted", false);
+      // Show applications that are not deleted (including those without isDeleted field)
+      query.notEqualTo("isDeleted", true);
     } else if (resource === "release") {
       const Resource = Parse.Object.extend("Release");
       query = new Parse.Query(Resource);

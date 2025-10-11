@@ -12,6 +12,7 @@ import {
 import { CreateApplications } from "./dialog/CreateApplications";
 import { EditApplications } from "./dialog/EditApplications";
 import { DeleteDialog } from "../../Layout/DeleteDialog";
+import BuildManagementDialog from "./dialog/BuildManagementDialog";
 // mui
 import { Button, Box, Menu, MenuItem, Card } from "@mui/material";
 // mui icon
@@ -19,7 +20,7 @@ import AddIcon from "@mui/icons-material/Add";
 // react router dom
 import { useNavigate } from "react-router-dom";
 
-const CustomButton = ({ onEdit, onDelete }) => {
+const CustomButton = ({ onEdit, onDelete, onManageBuild }) => {
   const record = useRecordContext();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -39,6 +40,11 @@ const CustomButton = ({ onEdit, onDelete }) => {
 
   const handleDeleteClick = () => {
     onDelete?.(record);
+    handleClose();
+  };
+
+  const handleManageBuild = () => {
+    onManageBuild?.(record);
     handleClose();
   };
 
@@ -72,6 +78,14 @@ const CustomButton = ({ onEdit, onDelete }) => {
         <MenuItem
           onClick={(e) => {
             e.stopPropagation();
+            handleManageBuild();
+          }}
+        >
+          Manage Build
+        </MenuItem>
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
             handleDeleteClick();
           }}
         >
@@ -89,6 +103,7 @@ export const ApplicationsList = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [buildManagementOpen, setBuildManagementOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   return (
@@ -138,6 +153,10 @@ export const ApplicationsList = () => {
                     setSelectedRecord(record);
                     setEditDialogOpen(true);
                   }}
+                  onManageBuild={(record) => {
+                    setSelectedRecord(record);
+                    setBuildManagementOpen(true);
+                  }}
                   onDelete={(record) => {
                     setSelectedRecord(record);
                     setDeleteDialogOpen(true);
@@ -165,6 +184,11 @@ export const ApplicationsList = () => {
         handleClose={() => setDeleteDialogOpen(false)}
         id={selectedRecord?.id}
         resource="applications"
+      />
+      <BuildManagementDialog
+        open={buildManagementOpen}
+        onClose={() => setBuildManagementOpen(false)}
+        record={selectedRecord}
       />
     </React.Fragment>
   );
