@@ -16,9 +16,12 @@ import { UserList } from "./Views/User/UserList";
 // applications component
 import { ApplicationsList } from "./Views/Applications/ApplicationsList";
 import { ReleaseList } from "./Views/Release/ReleaseList";
+// root build config component
+import { RootBuildConfigPage } from "./Views/RootBuildConfig/RootBuildConfigPage";
 // mui icon
 import PersonIcon from "@mui/icons-material/Person";
 import AppsIcon from "@mui/icons-material/Apps";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 function App() {
   return (
@@ -43,6 +46,12 @@ function App() {
               list={ApplicationsList}
               options={{ label: "Applications" }}
               icon={AppsIcon}
+            />
+            <Resource
+              name="root-build-config"
+              list={RootBuildConfigPage}
+              options={{ label: "Root Build Config" }}
+              icon={SettingsIcon}
             />
           </>
         ) : (

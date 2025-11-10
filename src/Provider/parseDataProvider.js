@@ -198,7 +198,14 @@ export const dataProvider = {
     var query = null;
     var count = null;
 
-    if (resource === "users") {
+    if (resource === "root-build-config") {
+      // Root build config doesn't use pagination, return empty list
+      // The actual page component will handle fetching the config
+      return {
+        total: 0,
+        data: [],
+      };
+    } else if (resource === "users") {
       query = new Parse.Query(Parse.User);
       query.include("role");
 
