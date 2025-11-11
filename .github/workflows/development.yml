@@ -1,4 +1,4 @@
-name: Deploy Developmnt version-control-backend
+name: Deploy Developmnt version-control-frontend
 
 on:
   push:
